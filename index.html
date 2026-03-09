@@ -1527,9 +1527,13 @@ function ncpGenerate(savedRows){
     const duration = parseInt(document.getElementById('ncp_duration').value)||0;
     const startVal = document.getElementById('ncp_start').value;
     const dueDay   = parseInt(document.getElementById('ncp_dueday').value)||1;
-    if(!duration){ showToast('❌ Enter Duration (months)', false); return; }
-    if(!members)  { showToast('❌ Enter No. of Members', false); return; }
-    if(!amount)   { showToast('❌ Enter Chit Amount (₹)', false); return; }
+    // Only validate when user clicks Generate — not during restore
+    if(!savedRows){
+        if(!duration){ showToast('❌ Enter Duration (months)', false); return; }
+        if(!members)  { showToast('❌ Enter No. of Members', false); return; }
+        if(!amount)   { showToast('❌ Enter Chit Amount (₹)', false); return; }
+    }
+    if(!duration || !members) return; // silent guard during restore
     const monthlyPay = Math.round(amount / members);
     const base = startVal ? new Date(startVal) : null;
     const chips = [
@@ -2313,6 +2317,21 @@ function ncpSaveVersion(){
     showToast(isNew ? '✅ Planner saved as "' + label + '"' : '🔄 Planner "' + label + '" overwritten', true);
 }
 
+// ── Overwrite active planner directly ────
+function ncpOverwriteActive(){
+    if(!ncpActivePlannerKey){ showToast('❌ No active planner to overwrite', false); return; }
+    const planners = ncpGetAllPlanners();
+    if(!planners[ncpActivePlannerKey]){ showToast('❌ Planner not found', false); return; }
+    const label = planners[ncpActivePlannerKey]._label || ncpActivePlannerKey;
+    const data = ncpReadCurrentForm();
+    data._label = label;
+    data._savedAt = new Date().toLocaleString('en-IN');
+    planners[ncpActivePlannerKey] = data;
+    ncpSetAllPlanners(planners);
+    ncpRenderSavedList();
+    showToast('🔄 "' + label + '" overwritten successfully', true);
+}
+
 // ── New blank planner ─────────────────────
 function ncpNewPlanner(){
     ncpActivePlannerKey = null;
@@ -2336,6 +2355,11 @@ function ncpLoadPlanner(key){
     ncpFillForm(data);
     ncpRenderSavedList();
     showToast('📂 Loaded "' + (data._label||key) + '"', true);
+    // Scroll planner into view
+    setTimeout(()=>{
+        const el = document.getElementById('newChitPlanner');
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 150);
 }
 
 // ── Delete a saved planner ────────────────
@@ -2369,7 +2393,10 @@ function ncpRenderSavedList(){
                     <div style="font-size:0.55rem;color:var(--text-dim);margin-top:1px;">Saved: ${p._savedAt||'—'}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
-                    ${!isActive?`<button onclick="ncpLoadPlanner('${k}')" style="background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:5px 11px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">📂 Load</button>`:'<span style="font-size:0.65rem;color:#a5b4fc;padding:5px 8px;font-weight:700;">Active</span>'}
+                    ${!isActive
+                        ? `<button onclick="ncpLoadPlanner('${k}')" style="background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:5px 11px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">📂 Load</button>`
+                        : `<button onclick="ncpOverwriteActive()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#34d399;padding:5px 11px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">💾 Overwrite</button>`
+                    }
                     <button onclick="ncpDeletePlanner('${k}')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:5px 10px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">🗑️</button>
                 </div>
             </div>`;
