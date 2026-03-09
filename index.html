@@ -256,50 +256,45 @@
         <div id="newChitPlanner" style="background:var(--card-bg);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:16px;">
 
             <!-- Planner Inputs -->
-            <div style="padding:16px;border-bottom:1px solid var(--border);">
-                <div style="font-size:0.7rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">⚙️ Chit Parameters</div>
+            <div style="padding:16px 16px 14px;border-bottom:1px solid var(--border);">
+                <div style="font-size:0.65rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">⚙️ Chit Parameters</div>
 
-                <!-- Row 1 -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                <!-- Row 1: Group Name | Member Name | No. of Members -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
                     <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">🏷️ Group Name</div>
-                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit 3L" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🏷️ Group Name</div>
+                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">👤 Member Name (for print)</div>
-                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👤 Member Name</div>
+                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                    </div>
+                    <div>
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👥 No. of Members</div>
+                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
-                <!-- Row 2 -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+                <!-- Row 2: Duration | Start Date | Due Day -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">💰 Chit Amount (₹)</div>
-                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 300000" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📆 Duration (months)</div>
+                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">👥 No. of Members</div>
-                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🗓️ Start Date</div>
+                        <input id="ncp_start" type="date" class="form-input" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">📆 Duration (months)</div>
-                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
-                    </div>
-                </div>
-
-                <!-- Row 3 -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-                    <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">🗓️ Start Date</div>
-                        <input id="ncp_start" type="date" class="form-input" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
-                    </div>
-                    <div>
-                        <div style="font-size:0.55rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:3px;">📅 Due Day of Month</div>
-                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" style="margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📅 Due Day of Month</div>
+                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
-                <button onclick="ncpGenerate()" style="width:100%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:10px;border-radius:10px;font-size:0.82rem;font-weight:800;cursor:pointer;">⚡ Generate Schedule</button>
+                <!-- Hidden Chit Amount (kept for JS compatibility) -->
+                <input id="ncp_amount" type="hidden" value="0">
+
+                <button onclick="ncpGenerate()" style="width:100%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:800;cursor:pointer;">⚡ Generate Schedule</button>
             </div>
 
             <!-- Schedule Table (hidden until generated) -->
