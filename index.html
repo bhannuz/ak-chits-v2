@@ -1507,20 +1507,16 @@ function ncpUpdateTotalsAndPct(){
 }
 
 function ncpGenerate(){
-    const amount   = parseFloat(document.getElementById('ncp_amount').value)||0;
     const members  = parseInt(document.getElementById('ncp_members').value)||0;
     const duration = parseInt(document.getElementById('ncp_duration').value)||0;
     const startVal = document.getElementById('ncp_start').value;
     const dueDay   = parseInt(document.getElementById('ncp_dueday').value)||1;
     if(!duration){ showToast('❌ Enter Duration (months)', false); return; }
-    if(!amount)  { showToast('❌ Enter Chit Amount', false); return; }
+    if(!members) { showToast('❌ Enter No. of Members', false); return; }
     const base = startVal ? new Date(startVal) : null;
-    const monthlyPay = members>0 ? Math.round(amount/members) : 0;
     const chips = [
         ['Duration', duration+' mo'],
         ['Members', members||'—'],
-        ['Chit Amt', amount?'₹'+amount.toLocaleString('en-IN'):'—'],
-        ['Monthly Pay', monthlyPay?'₹'+monthlyPay.toLocaleString('en-IN'):'—'],
         ['Start', base?base.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—'],
         ['Due Day', dueDay],
     ];
