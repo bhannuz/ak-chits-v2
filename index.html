@@ -253,29 +253,40 @@
             <div style="font-size:0.65rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">📋 New Chit Planner</div>
             <div style="flex:1;height:1px;background:var(--border);"></div>
         </div>
+        <!-- SAVED PLANNERS LIST -->
+        <div id="ncpSavedList" style="margin-bottom:12px;"></div>
+
         <div id="newChitPlanner" style="background:var(--card-bg);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:16px;">
+
+            <!-- Planner Header with Version Label -->
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <div style="font-size:0.65rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.6px;">⚙️ Chit Parameters</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input id="ncp_version_label" type="text" placeholder="Version name (e.g. v1, Draft A)" style="background:var(--input-bg);border:1px solid var(--border);color:white;padding:6px 10px;border-radius:9px;font-size:0.75rem;width:160px;">
+                    <button onclick="ncpSaveVersion()" style="background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:6px 14px;border-radius:9px;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;">💾 Save</button>
+                    <button onclick="ncpNewPlanner()" style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:6px 12px;border-radius:9px;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;">＋ New</button>
+                </div>
+            </div>
 
             <!-- Planner Inputs -->
             <div style="padding:16px 16px 14px;border-bottom:1px solid var(--border);">
-                <div style="font-size:0.65rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">⚙️ Chit Parameters</div>
-
                 <!-- Row 1: Group Name | Member Name | Chit Amount | No. of Members -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🏷️ Group Name</div>
-                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👤 Member Name</div>
-                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">💰 Chit Amount (₹)</div>
-                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 500000" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 500000" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👥 No. of Members</div>
-                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
@@ -283,15 +294,15 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📆 Duration (months)</div>
-                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🗓️ Start Date</div>
-                        <input id="ncp_start" type="date" class="form-input" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_start" type="date" class="form-input" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📅 Due Day of Month</div>
-                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
@@ -325,9 +336,10 @@
                     <span style="width:60px;"></span>
                 </div>
 
-                <!-- Print button -->
-                <div style="padding:12px 14px;">
-                    <button onclick="ncpPrint()" style="width:100%;background:linear-gradient(135deg,#f39c12,#f57c00);color:#000;border:none;padding:10px;border-radius:10px;font-size:0.82rem;font-weight:800;cursor:pointer;">🖨️ Preview &amp; Print Schedule</button>
+                <!-- Print + Save buttons -->
+                <div style="padding:12px 14px;display:flex;gap:8px;">
+                    <button onclick="ncpSaveVersion()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:10px;border-radius:10px;font-size:0.82rem;font-weight:800;cursor:pointer;">💾 Save Planner</button>
+                    <button onclick="ncpPrint()" style="flex:2;background:linear-gradient(135deg,#f39c12,#f57c00);color:#000;border:none;padding:10px;border-radius:10px;font-size:0.82rem;font-weight:800;cursor:pointer;">🖨️ Preview &amp; Print Schedule</button>
                 </div>
             </div>
         </div>
@@ -2226,14 +2238,21 @@ async function pollPendingRequests(){
 }
 
 // ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-// ══════════════════════════════════════════
-// CHIT PLANNER — SAVE & RESTORE
+// CHIT PLANNER — MULTI-PLANNER SYSTEM
 // ══════════════════════════════════════════
 const NCP_FIELDS = ['ncp_name','ncp_member','ncp_amount','ncp_members','ncp_duration','ncp_start','ncp_dueday'];
+const NCP_STORAGE_KEY = 'akdf_ncp_planners';
+const NCP_ACTIVE_KEY  = 'akdf_ncp_active';
+let ncpActivePlannerKey = null; // key of currently loaded planner
 
-function ncpSave(){
+// ── Helpers ──────────────────────────────
+function ncpGetAllPlanners(){
+    try { return JSON.parse(localStorage.getItem(NCP_STORAGE_KEY)) || {}; }
+    catch(e){ return {}; }
+}
+function ncpSetAllPlanners(obj){ localStorage.setItem(NCP_STORAGE_KEY, JSON.stringify(obj)); }
+
+function ncpReadCurrentForm(){
     const data = {};
     NCP_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
     const rows = document.querySelectorAll('#ncp_rows .ncp-row');
@@ -2244,29 +2263,158 @@ function ncpSave(){
         }));
         data._tableVisible = true;
     }
-    localStorage.setItem('akdf_ncp', JSON.stringify(data));
+    return data;
 }
 
-function ncpRestore(){
-    try {
-        const saved = localStorage.getItem('akdf_ncp');
-        if(!saved) return;
-        const data = JSON.parse(saved);
-        NCP_FIELDS.forEach(id => {
-            const el = document.getElementById(id);
-            if(el && data[id] !== undefined) el.value = data[id];
-        });
-        if(data._tableVisible && data._rows && data._rows.length){
-            ncpGenerate(data._rows);
+function ncpFillForm(data){
+    NCP_FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        if(el && data[id] !== undefined) el.value = data[id];
+    });
+    if(data._tableVisible && data._rows && data._rows.length){
+        ncpGenerate(data._rows);
+    } else {
+        document.getElementById('ncp_tableWrap').style.display = 'none';
+        document.getElementById('ncp_rows').innerHTML = '';
+    }
+}
+
+// ── Auto-save current planner draft ──────
+function ncpAutoSave(){
+    // Always save draft to temp key so nothing is lost
+    const data = ncpReadCurrentForm();
+    data._label = document.getElementById('ncp_version_label').value;
+    localStorage.setItem('akdf_ncp_draft', JSON.stringify(data));
+    // Also update the active saved planner if one is loaded
+    if(ncpActivePlannerKey){
+        const planners = ncpGetAllPlanners();
+        if(planners[ncpActivePlannerKey]){
+            planners[ncpActivePlannerKey] = { ...planners[ncpActivePlannerKey], ...data };
+            ncpSetAllPlanners(planners);
         }
-    } catch(e) { console.warn('NCP restore failed', e); }
+    }
 }
 
+// ── Save / Overwrite a version ────────────
+function ncpSaveVersion(){
+    const label = document.getElementById('ncp_version_label').value.trim();
+    if(!label){ showToast('❌ Enter a version name to save', false); return; }
+    const planners = ncpGetAllPlanners();
+    const key = 'planner_' + label.replace(/\s+/g,'_').toLowerCase();
+    const isNew = !planners[key];
+    const data = ncpReadCurrentForm();
+    data._label = label;
+    data._savedAt = new Date().toLocaleString('en-IN');
+    planners[key] = data;
+    ncpSetAllPlanners(planners);
+    ncpActivePlannerKey = key;
+    localStorage.setItem(NCP_ACTIVE_KEY, key);
+    ncpRenderSavedList();
+    showToast(isNew ? '✅ Planner saved as "' + label + '"' : '🔄 Planner "' + label + '" overwritten', true);
+}
+
+// ── New blank planner ─────────────────────
+function ncpNewPlanner(){
+    ncpActivePlannerKey = null;
+    localStorage.removeItem(NCP_ACTIVE_KEY);
+    NCP_FIELDS.forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('ncp_version_label').value = '';
+    document.getElementById('ncp_tableWrap').style.display = 'none';
+    document.getElementById('ncp_rows').innerHTML = '';
+    ncpRenderSavedList();
+    showToast('📋 New blank planner ready', true);
+}
+
+// ── Load a saved planner ──────────────────
+function ncpLoadPlanner(key){
+    const planners = ncpGetAllPlanners();
+    const data = planners[key];
+    if(!data) return;
+    ncpActivePlannerKey = key;
+    localStorage.setItem(NCP_ACTIVE_KEY, key);
+    document.getElementById('ncp_version_label').value = data._label || '';
+    ncpFillForm(data);
+    ncpRenderSavedList();
+    showToast('📂 Loaded "' + (data._label||key) + '"', true);
+}
+
+// ── Delete a saved planner ────────────────
+function ncpDeletePlanner(key){
+    const planners = ncpGetAllPlanners();
+    const label = planners[key]?._label || key;
+    if(!confirm('Delete planner "' + label + '"?')) return;
+    delete planners[key];
+    ncpSetAllPlanners(planners);
+    if(ncpActivePlannerKey === key){ ncpNewPlanner(); }
+    else { ncpRenderSavedList(); }
+    showToast('🗑️ Deleted "' + label + '"', false);
+}
+
+// ── Render saved planners list ────────────
+function ncpRenderSavedList(){
+    const planners = ncpGetAllPlanners();
+    const keys = Object.keys(planners);
+    const el = document.getElementById('ncpSavedList');
+    if(!keys.length){ el.innerHTML = ''; return; }
+    el.innerHTML = `
+        <div style="margin-bottom:8px;font-size:0.6rem;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">📁 Saved Planners (${keys.length})</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+        ${keys.map(k => {
+            const p = planners[k];
+            const isActive = k === ncpActivePlannerKey;
+            return `<div style="display:flex;align-items:center;gap:8px;background:${isActive?'rgba(99,102,241,0.15)':'var(--card-bg)'};border:1px solid ${isActive?'rgba(99,102,241,0.5)':'var(--border)'};border-radius:12px;padding:10px 14px;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.82rem;font-weight:800;color:${isActive?'#a5b4fc':'white'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isActive?'✏️ ':''}${p._label||k}</div>
+                    <div style="font-size:0.58rem;color:var(--text-dim);margin-top:2px;">${p.ncp_name||'—'} &nbsp;·&nbsp; ${p.ncp_members||'?'} members &nbsp;·&nbsp; ${p.ncp_duration||'?'} months &nbsp;·&nbsp; ₹${p.ncp_amount?Number(p.ncp_amount).toLocaleString('en-IN'):'?'}</div>
+                    <div style="font-size:0.55rem;color:var(--text-dim);margin-top:1px;">Saved: ${p._savedAt||'—'}</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                    ${!isActive?`<button onclick="ncpLoadPlanner('${k}')" style="background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);color:#a5b4fc;padding:5px 11px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">📂 Load</button>`:'<span style="font-size:0.65rem;color:#a5b4fc;padding:5px 8px;font-weight:700;">Active</span>'}
+                    <button onclick="ncpDeletePlanner('${k}')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:5px 10px;border-radius:8px;font-size:0.72rem;font-weight:800;cursor:pointer;">🗑️</button>
+                </div>
+            </div>`;
+        }).join('')}
+        </div>`;
+}
+
+// ── Restore last active planner on load ───
+function ncpRestoreSession(){
+    const lastKey = localStorage.getItem(NCP_ACTIVE_KEY);
+    const planners = ncpGetAllPlanners();
+    ncpRenderSavedList();
+    if(lastKey && planners[lastKey]){
+        ncpActivePlannerKey = lastKey;
+        document.getElementById('ncp_version_label').value = planners[lastKey]._label || '';
+        ncpFillForm(planners[lastKey]);
+        ncpRenderSavedList();
+    } else {
+        // Restore unsaved draft if exists
+        try {
+            const draft = localStorage.getItem('akdf_ncp_draft');
+            if(draft){
+                const data = JSON.parse(draft);
+                NCP_FIELDS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el && data[id] !== undefined) el.value = data[id];
+                });
+                if(data._label) document.getElementById('ncp_version_label').value = data._label;
+                if(data._tableVisible && data._rows && data._rows.length) ncpGenerate(data._rows);
+            }
+        } catch(e){}
+    }
+}
+
+// Legacy alias so ncpGenerate still works
+function ncpSave(){ ncpAutoSave(); }
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('pDate').value=new Date().toISOString().split('T')[0];
     setTimeout(migrateData,800);
     initAuth();
-    setTimeout(ncpRestore, 300);
+    setTimeout(ncpRestoreSession, 300);
     setInterval(()=>{ if(CURRENT_USER&&CURRENT_USER.role==='admin') pollPendingRequests(); }, 60000);
 });
 </script>
