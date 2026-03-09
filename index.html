@@ -259,8 +259,8 @@
             <div style="padding:16px 16px 14px;border-bottom:1px solid var(--border);">
                 <div style="font-size:0.65rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">⚙️ Chit Parameters</div>
 
-                <!-- Row 1: Group Name | Member Name | No. of Members -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+                <!-- Row 1: Group Name | Member Name | Chit Amount | No. of Members -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🏷️ Group Name</div>
                         <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
@@ -268,6 +268,10 @@
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👤 Member Name</div>
                         <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                    </div>
+                    <div>
+                        <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">💰 Chit Amount (₹)</div>
+                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 500000" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👥 No. of Members</div>
@@ -290,9 +294,6 @@
                         <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
-
-                <!-- Hidden Chit Amount (kept for JS compatibility) -->
-                <input id="ncp_amount" type="hidden" value="0">
 
                 <button onclick="ncpGenerate()" style="width:100%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:800;cursor:pointer;">⚡ Generate Schedule</button>
             </div>
@@ -1507,12 +1508,15 @@ function ncpUpdateTotalsAndPct(){
 }
 
 function ncpGenerate(){
+    const amount   = parseFloat(document.getElementById('ncp_amount').value)||0;
     const members  = parseInt(document.getElementById('ncp_members').value)||0;
     const duration = parseInt(document.getElementById('ncp_duration').value)||0;
     const startVal = document.getElementById('ncp_start').value;
     const dueDay   = parseInt(document.getElementById('ncp_dueday').value)||1;
     if(!duration){ showToast('❌ Enter Duration (months)', false); return; }
-    if(!members) { showToast('❌ Enter No. of Members', false); return; }
+    if(!members)  { showToast('❌ Enter No. of Members', false); return; }
+    if(!amount)   { showToast('❌ Enter Chit Amount (₹)', false); return; }
+    const monthlyPay = Math.round(amount / members);
     const base = startVal ? new Date(startVal) : null;
     const chips = [
         ['Duration', duration+' mo'],
@@ -1548,7 +1552,6 @@ function ncpGenerate(){
 function ncpPrint(){
     const name       = document.getElementById('ncp_name').value.trim() || 'New Chit Group';
     const memberName = document.getElementById('ncp_member').value.trim();
-    const amount     = parseFloat(document.getElementById('ncp_amount').value)||0;
     const members    = parseInt(document.getElementById('ncp_members').value)||0;
     const duration   = parseInt(document.getElementById('ncp_duration').value)||0;
     const startVal   = document.getElementById('ncp_start').value;
@@ -1556,7 +1559,7 @@ function ncpPrint(){
     const base       = startVal ? new Date(startVal) : null;
     const startDisp  = base ? base.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : '—';
     const today      = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
-    const monthlyPayBase = members>0 ? Math.round(amount/members) : 0;
+    const monthlyPayBase = 0;
     const rows = document.querySelectorAll('#ncp_rows .ncp-row');
     let totalPay=0;
     const rowData=[];
@@ -1622,7 +1625,7 @@ function ncpPrint(){
             <div class="chip" style="flex:1;"><div class="chip-v" style="color:#065f46;">&#8377;${totalPay.toLocaleString('en-IN')}</div><div class="chip-l">Total Monthly Pay</div></div>
         </div>
     </div>
-    <div class="notice">&#128161; <b>How this Chit Works:</b> This group runs for <b>${duration} months</b> with <b>${members||'?'} members</b>. Chit amount is <b>&#8377;${amount.toLocaleString('en-IN')}</b>. Each member pays approx <b>&#8377;${monthlyPayBase.toLocaleString('en-IN')}/month</b>. Monthly pay increases gradually. Every member wins once over the full cycle.</div>
+    <div class="notice">&#128161; <b>How this Chit Works:</b> This group runs for <b>${duration} months</b> with <b>${members||'?'} members</b>. Monthly pay increases gradually. Every member wins once over the full cycle.</div>
     <table>
         <thead><tr>
             <th style="width:5%;text-align:center;">Month #</th>
