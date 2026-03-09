@@ -263,19 +263,19 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🏷️ Group Name</div>
-                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_name" type="text" class="form-input" placeholder="e.g. Gold Chit" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👤 Member Name</div>
-                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_member" type="text" class="form-input" placeholder="e.g. Ramesh Kumar" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">💰 Chit Amount (₹)</div>
-                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 500000" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_amount" type="number" class="form-input" placeholder="e.g. 500000" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">👥 No. of Members</div>
-                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_members" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
@@ -283,15 +283,15 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📆 Duration (months)</div>
-                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🗓️ Start Date</div>
-                        <input id="ncp_start" type="date" class="form-input" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_start" type="date" class="form-input" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📅 Due Day of Month</div>
-                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                        <input id="ncp_dueday" type="number" min="1" max="31" class="form-input" placeholder="e.g. 8" oninput="ncpSave()" oninput="ncpSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
                     </div>
                 </div>
 
@@ -1505,9 +1505,11 @@ function ncpUpdateTotalsAndPct(){
             el.style.color = pctNum>=100?'#34d399':pctNum>=80?'#f59e0b':'#f87171';
         }
     });
+    // Auto-save whenever rows are edited
+    if(document.getElementById('ncp_tableWrap').style.display !== 'none') ncpSave();
 }
 
-function ncpGenerate(){
+function ncpGenerate(savedRows){
     const amount   = parseFloat(document.getElementById('ncp_amount').value)||0;
     const members  = parseInt(document.getElementById('ncp_members').value)||0;
     const duration = parseInt(document.getElementById('ncp_duration').value)||0;
@@ -1539,14 +1541,25 @@ function ncpGenerate(){
         div.innerHTML = `
             <span style="width:30px;font-size:0.65rem;color:var(--text-dim);font-weight:700;text-align:center;flex-shrink:0;">${i+1}</span>
             <span class="ncp-due" style="flex:1.2;font-size:0.62rem;color:#a5b4fc;white-space:nowrap;">${dueStr}</span>
-            <input type="number" class="ncp-pay form-input" value="${monthlyPay||''}" placeholder="Monthly Pay" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct()">
-            <input type="number" class="ncp-chit form-input" value="" placeholder="Chit Payout" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct()">
+            <input type="number" class="ncp-pay form-input" value="${monthlyPay||''}" placeholder="Monthly Pay" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
+            <input type="number" class="ncp-chit form-input" value="" placeholder="Chit Payout" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
             <span class="ncp-pct" style="width:60px;text-align:center;font-size:0.68rem;font-weight:800;color:var(--text-dim);">—</span>`;
         rowsEl.appendChild(div);
     }
+    // Restore saved pay/chit values if available
+    if(savedRows && savedRows.length){
+        const allRows = document.querySelectorAll('#ncp_rows .ncp-row');
+        savedRows.forEach((sr, i) => {
+            if(allRows[i]){
+                allRows[i].querySelector('.ncp-pay').value = sr.pay || '';
+                allRows[i].querySelector('.ncp-chit').value = sr.chit || '';
+            }
+        });
+    }
     document.getElementById('ncp_tableWrap').style.display = 'block';
     ncpUpdateTotalsAndPct();
-    showToast('✅ Schedule generated — fill in Chit Payout per month', true);
+    if(!savedRows) showToast('✅ Schedule generated — fill in Chit Payout per month', true);
+    ncpSave();
 }
 
 function ncpPrint(){
@@ -2215,10 +2228,45 @@ async function pollPendingRequests(){
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// CHIT PLANNER — SAVE & RESTORE
+// ══════════════════════════════════════════
+const NCP_FIELDS = ['ncp_name','ncp_member','ncp_amount','ncp_members','ncp_duration','ncp_start','ncp_dueday'];
+
+function ncpSave(){
+    const data = {};
+    NCP_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+    const rows = document.querySelectorAll('#ncp_rows .ncp-row');
+    if(rows.length){
+        data._rows = Array.from(rows).map(row => ({
+            pay: row.querySelector('.ncp-pay').value,
+            chit: row.querySelector('.ncp-chit').value
+        }));
+        data._tableVisible = true;
+    }
+    localStorage.setItem('akdf_ncp', JSON.stringify(data));
+}
+
+function ncpRestore(){
+    try {
+        const saved = localStorage.getItem('akdf_ncp');
+        if(!saved) return;
+        const data = JSON.parse(saved);
+        NCP_FIELDS.forEach(id => {
+            const el = document.getElementById(id);
+            if(el && data[id] !== undefined) el.value = data[id];
+        });
+        if(data._tableVisible && data._rows && data._rows.length){
+            ncpGenerate(data._rows);
+        }
+    } catch(e) { console.warn('NCP restore failed', e); }
+}
+
 document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('pDate').value=new Date().toISOString().split('T')[0];
     setTimeout(migrateData,800);
     initAuth();
+    setTimeout(ncpRestore, 300);
     setInterval(()=>{ if(CURRENT_USER&&CURRENT_USER.role==='admin') pollPendingRequests(); }, 60000);
 });
 </script>
