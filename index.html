@@ -850,93 +850,6 @@ async function loadMemberLedger(){
     function enrQtyFor(enr){ return parseInt(enr.qty||1); }
 
     // Build ledger sections — if qty>1, render one sub-section per slot
-    function buildPayRows(pays, allDueDates, sectionIdx){
-        return pays.map((p,idx)=>{
-            const cp=p.chitPicked==='Yes';
-            const isMulti=p.numMonths&&p.numMonths>1;
-            const months=p.monthSlots||[];
-            let monthLabel='—';
-            if(isMulti && months.length>0){
-                const firstLabel=months[0]>=0&&allDueDates[months[0]]?fmtDate(allDueDates[months[0]]):'—';
-                const lastLabel=months[months.length-1]>=0&&allDueDates[months[months.length-1]]?fmtDate(allDueDates[months[months.length-1]]):'—';
-                monthLabel=`${firstLabel} → ${lastLabel}`;
-            } else {
-                const slotIdx=p.monthSlot!==undefined?p.monthSlot:getMonthSlot(allDueDates,p.date);
-                monthLabel=slotIdx>=0&&allDueDates[slotIdx]?fmtDate(allDueDates[slotIdx]):'—';
-            }
-            const rowClass=cp?'chit-picked':(isMulti?'multi-month-row':'');
-            return `<tr class="${rowClass}">
-                <td style="color:var(--text-dim);font-weight:700;">${idx+1}</td>
-                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
-                <td>${fmtDate(p.date)}</td>
-                <td style="color:#c4b5fd;">${fmtAmt(p.chit)}${isMulti?`<span style="font-size:0.55rem;color:var(--text-dim);display:block;">/mo × ${p.numMonths}</span>`:''}</td>
-                <td style="color:#34d399;font-weight:700;">${fmtAmt(p.paid)}</td>
-                <td style="color:#f59e0b;">${fmtAmt(p.balance)}</td>
-                <td style="color:var(--text-dim);font-size:0.6rem;">${p.paidBy||'—'}</td>
-                <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
-                <td><button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button></td>
-            </tr>`;
-        }).join('');
-    }
-
-    function buildSlotSection(grp, enr, slotPays, allDueDates, totalMonths, left, gStartDisplay, gDueDayOrd, tableId, slotNum, totalSlots){
-        const tPaid=slotPays.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
-        const tBal=slotPays.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
-        const multiMonthCount=slotPays.filter(p=>p.numMonths&&p.numMonths>1).length;
-        const rows=buildPayRows(slotPays, allDueDates);
-
-        // Slot header: show "Chit N of M" badge only when multi-chit
-        const slotBadge = totalSlots>1
-            ? `<span style="background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.5);color:#fbbf24;border-radius:6px;padding:2px 8px;font-size:0.62rem;font-weight:800;margin-left:6px;">Chit ${slotNum} of ${totalSlots}</span>`
-            : '';
-        const labelBadge = enr.label
-            ? `<span style="font-size:0.65rem;background:rgba(243,156,18,.18);border:1px solid rgba(243,156,18,.35);border-radius:5px;padding:1px 6px;color:#f39c12;margin-left:4px;">${enr.label}</span>`
-            : '';
-
-        return `<div style="margin-bottom:${totalSlots>1?'8':'12'}px;${totalSlots>1?'border-left:3px solid rgba(245,158,11,0.4);margin-left:4px;':''}">
-            <div style="background:#1c253b;border-radius:12px 12px 0 0;padding:10px 14px;border:1px solid var(--border);border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                <div>
-                    <div style="font-size:0.8rem;font-weight:800;color:#f39c12;margin-bottom:4px;">📂 ${grp.name}${labelBadge}${slotBadge}</div>
-                    <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                        <span style="font-size:0.58rem;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:5px;padding:1px 6px;color:#a5b4fc;">🗓 Started: ${gStartDisplay}</span>
-                        ${grp.dueDay?`<span style="font-size:0.58rem;background:rgba(243,156,18,.12);border:1px solid rgba(243,156,18,.3);border-radius:5px;padding:1px 6px;color:#f39c12;">📅 Due: ${gDueDayOrd}</span>`:''}
-                        ${multiMonthCount>0?`<span style="font-size:0.58rem;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);border-radius:5px;padding:1px 6px;color:#a5b4fc;">📦 ${multiMonthCount} bulk</span>`:''}
-                    </div>
-                </div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-size:1rem;font-weight:800;color:#a5b4fc;">${left}<span style="font-size:0.62rem;color:var(--text-dim);">/${totalMonths}</span></div>
-                    <div style="font-size:0.55rem;color:var(--text-dim);text-transform:uppercase;">months pending</div>
-                </div>
-            </div>
-            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden;">
-                <div onclick="toggleLedgerTable('${tableId}',this)" style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);">
-                    <span style="font-size:0.65rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;">Payment History (${slotPays.length} entries)</span>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:0.65rem;color:#34d399;">${fmtAmt(tPaid)} paid</span>
-                        ${tBal>0?`<span style="font-size:0.65rem;color:#f59e0b;">${fmtAmt(tBal)} bal</span>`:''}
-                        <span style="font-size:0.8rem;color:var(--text-dim);transition:transform .25s;" class="ledger-chevron">▶</span>
-                    </div>
-                </div>
-                <div id="${tableId}" style="display:none;">
-                    <div style="overflow-x:auto;"><table class="table-custom">
-                        <thead><tr><th>#</th><th>Month(s) Covered</th><th>Pay Date</th><th>Chit/Mo</th><th>Total Paid</th><th>Balance</th><th>Mode</th><th>Chit Picked</th><th></th></tr></thead>
-                        <tbody>${rows||`<tr><td colspan="9" style="text-align:center;color:var(--text-dim);padding:16px;">No payments yet</td></tr>`}
-                        ${slotPays.length?`<tr style="font-weight:800;background:rgba(255,255,255,.04);">
-                            <td colspan="4" style="color:var(--text-dim);">Total</td>
-                            <td style="color:#34d399;">${fmtAmt(tPaid)}</td>
-                            <td style="color:#f59e0b;">${fmtAmt(tBal)}</td>
-                            <td colspan="3"></td>
-                        </tr>`:''}
-                        </tbody>
-                    </table></div>
-                    ${multiMonthCount>0?`<div style="padding:8px 14px 10px;font-size:0.62rem;color:#a5b4fc;border-top:1px solid var(--border);">
-                        <span style="margin-right:6px;">📅</span> Purple rows = multi-month bulk payments
-                    </div>`:''}
-                </div>
-            </div>
-        </div>`;
-    }
-
     const payTablesHtml=enrollments.map((enr,gi)=>{
         const grp=gs.find(g=>g.id===enr.groupId); if(!grp) return '';
         const qty=parseInt(enr.qty||1);
@@ -955,24 +868,94 @@ async function loadMemberLedger(){
         const left=Math.max(0,totalMonths-elapsed);
         const gStartDisplay=fmtDate(grp.startDate||grp.gStart||'');
         const gDueDayOrd=grp.dueDay?`${grp.dueDay}${['st','nd','rd'][((grp.dueDay%100-11)%10)-1]||'th'}`:'—';
+        const tPaid=allPays.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
+        const tBal=allPays.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
+        const multiMonthCount=allPays.filter(p=>p.numMonths&&p.numMonths>1).length;
+        const tableId=`ledgerTable_${gi}`;
+        const showSlotCol = qty > 1; // only show Chit column for multi-chit members
 
-        if(qty <= 1){
-            // Single chit — render as before, no slot differentiation
-            return buildSlotSection(grp, enr, allPays, allDueDates, totalMonths, left, gStartDisplay, gDueDayOrd, `ledgerTable_${gi}_1`, 1, 1);
-        } else {
-            // Multi-chit — group header + one sub-section per slot
-            const slotSections = Array.from({length:qty},(_,i)=>{
-                const slotNum = i+1;
-                const slotPays = allPays.filter(p=> p.slotNum ? p.slotNum===slotNum : true);
-                return buildSlotSection(grp, enr, slotPays, allDueDates, totalMonths, left, gStartDisplay, gDueDayOrd, `ledgerTable_${gi}_${slotNum}`, slotNum, qty);
-            }).join('');
-            return `<div style="margin-bottom:14px;">
-                <div style="font-size:0.72rem;font-weight:800;color:#f39c12;text-transform:uppercase;letter-spacing:.5px;padding:6px 4px 8px;">
-                    📂 ${grp.name}${enr.label?` — ${enr.label}`:''} &nbsp;<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:6px;padding:2px 8px;font-size:0.6rem;">×${qty} chits</span>
+        const labelBadge = enr.label
+            ? `<span style="font-size:0.65rem;background:rgba(243,156,18,.18);border:1px solid rgba(243,156,18,.35);border-radius:5px;padding:1px 6px;color:#f39c12;margin-left:4px;">${enr.label}</span>` : '';
+        const qtyBadge = qty>1
+            ? `<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 8px;font-size:0.6rem;font-weight:800;margin-left:5px;">×${qty} chits</span>` : '';
+
+        const rows = allPays.map((p,idx)=>{
+            const cp=p.chitPicked==='Yes';
+            const isMulti=p.numMonths&&p.numMonths>1;
+            const months=p.monthSlots||[];
+            let monthLabel='—';
+            if(isMulti && months.length>0){
+                const fl=months[0]>=0&&allDueDates[months[0]]?fmtDate(allDueDates[months[0]]):'—';
+                const ll=months[months.length-1]>=0&&allDueDates[months[months.length-1]]?fmtDate(allDueDates[months[months.length-1]]):'—';
+                monthLabel=`${fl} → ${ll}`;
+            } else {
+                const si=p.monthSlot!==undefined?p.monthSlot:getMonthSlot(allDueDates,p.date);
+                monthLabel=si>=0&&allDueDates[si]?fmtDate(allDueDates[si]):'—';
+            }
+            const slotNum = p.slotNum||1;
+            const slotCell = showSlotCol
+                ? `<td style="text-align:center;"><span style="background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:2px 7px;font-size:0.65rem;font-weight:800;">Chit ${slotNum}</span></td>`
+                : '';
+            const rowClass=cp?'chit-picked':(isMulti?'multi-month-row':'');
+            return `<tr class="${rowClass}">
+                <td style="color:var(--text-dim);font-weight:700;">${idx+1}</td>
+                ${slotCell}
+                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
+                <td>${fmtDate(p.date)}</td>
+                <td style="color:#c4b5fd;">${fmtAmt(p.chit)}${isMulti?`<span style="font-size:0.55rem;color:var(--text-dim);display:block;">/mo × ${p.numMonths}</span>`:''}</td>
+                <td style="color:#34d399;font-weight:700;">${fmtAmt(p.paid)}</td>
+                <td style="color:#f59e0b;">${fmtAmt(p.balance)}</td>
+                <td style="color:var(--text-dim);font-size:0.6rem;">${p.paidBy||'—'}</td>
+                <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
+                <td><button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button></td>
+            </tr>`;
+        }).join('');
+
+        const colSpanTotal = showSlotCol ? 5 : 4;
+        const theadSlotCol = showSlotCol ? `<th style="text-align:center;">Chit</th>` : '';
+
+        return `<div style="margin-bottom:12px;">
+            <div style="background:#1c253b;border-radius:12px 12px 0 0;padding:10px 14px;border:1px solid var(--border);border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div>
+                    <div style="font-size:0.8rem;font-weight:800;color:#f39c12;margin-bottom:4px;">📂 ${grp.name}${labelBadge}${qtyBadge}</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                        <span style="font-size:0.58rem;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:5px;padding:1px 6px;color:#a5b4fc;">🗓 Started: ${gStartDisplay}</span>
+                        ${grp.dueDay?`<span style="font-size:0.58rem;background:rgba(243,156,18,.12);border:1px solid rgba(243,156,18,.3);border-radius:5px;padding:1px 6px;color:#f39c12;">📅 Due: ${gDueDayOrd}</span>`:''}
+                        ${multiMonthCount>0?`<span style="font-size:0.58rem;background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);border-radius:5px;padding:1px 6px;color:#a5b4fc;">📦 ${multiMonthCount} bulk payment${multiMonthCount>1?'s':''}</span>`:''}
+                    </div>
                 </div>
-                ${slotSections}
-            </div>`;
-        }
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-size:1rem;font-weight:800;color:#a5b4fc;">${left}<span style="font-size:0.62rem;color:var(--text-dim);">/${totalMonths}</span></div>
+                    <div style="font-size:0.55rem;color:var(--text-dim);text-transform:uppercase;">months pending</div>
+                </div>
+            </div>
+            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden;">
+                <div onclick="toggleLedgerTable('${tableId}',this)" style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);">
+                    <span style="font-size:0.65rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;">Payment History (${allPays.length} entries)</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:0.65rem;color:#34d399;">${fmtAmt(tPaid)} paid</span>
+                        ${tBal>0?`<span style="font-size:0.65rem;color:#f59e0b;">${fmtAmt(tBal)} bal</span>`:''}
+                        <span style="font-size:0.8rem;color:var(--text-dim);transition:transform .25s;" class="ledger-chevron">▶</span>
+                    </div>
+                </div>
+                <div id="${tableId}" style="display:none;">
+                    <div style="overflow-x:auto;"><table class="table-custom">
+                        <thead><tr><th>#</th>${theadSlotCol}<th>Month(s) Covered</th><th>Pay Date</th><th>Chit/Mo</th><th>Total Paid</th><th>Balance</th><th>Mode</th><th>Chit Picked</th><th></th></tr></thead>
+                        <tbody>${rows||`<tr><td colspan="${colSpanTotal+5}" style="text-align:center;color:var(--text-dim);padding:16px;">No payments yet</td></tr>`}
+                        ${allPays.length?`<tr style="font-weight:800;background:rgba(255,255,255,.04);">
+                            <td colspan="${colSpanTotal}" style="color:var(--text-dim);">Total</td>
+                            <td style="color:#34d399;">${fmtAmt(tPaid)}</td>
+                            <td style="color:#f59e0b;">${fmtAmt(tBal)}</td>
+                            <td colspan="3"></td>
+                        </tr>`:''}
+                        </tbody>
+                    </table></div>
+                    ${multiMonthCount>0?`<div style="padding:8px 14px 10px;font-size:0.62rem;color:#a5b4fc;border-top:1px solid var(--border);">
+                        <span style="margin-right:6px;">📅</span> Purple rows = multi-month bulk payments
+                    </div>`:''}
+                </div>
+            </div>
+        </div>`;
     }).join('');
 
     const isMember = CURRENT_USER && CURRENT_USER.role === 'member';
