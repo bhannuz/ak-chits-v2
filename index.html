@@ -317,23 +317,23 @@
                 <!-- Editable schedule rows -->
                 <div style="padding:12px 14px 6px;">
                     <div style="font-size:0.65rem;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">✏️ Edit Schedule (Monthly Pay &amp; Chit Payout per month)</div>
-                    <div style="display:flex;gap:4px;margin-bottom:4px;font-size:0.56rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;padding:0 2px;">
-                        <span style="width:30px;text-align:center;">#</span>
-                        <span style="flex:1.2;">Due Date</span>
-                        <span style="flex:1;">Monthly Pay (₹)</span>
-                        <span style="flex:1;">Chit Payout (₹)</span>
-                        <span style="width:60px;text-align:center;">% Return</span>
+                    <div style="display:flex;gap:4px;margin-bottom:4px;font-size:0.62rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;padding:0 2px;">
+                        <span style="width:26px;text-align:center;">#</span>
+                        <span style="flex:1.4;">Due Date</span>
+                        <span style="flex:1.2;">Monthly Pay (₹)</span>
+                        <span style="flex:1.2;">Chit Payout (₹)</span>
+                        <span style="width:52px;text-align:center;">%</span>
                     </div>
                     <div id="ncp_rows" style="display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;"></div>
                 </div>
 
                 <!-- Total row -->
-                <div id="ncp_total" style="display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(243,156,18,0.07);border-top:1px solid var(--border);font-size:0.72rem;font-weight:800;">
-                    <span style="width:30px;"></span>
-                    <span style="flex:1.2;color:#f39c12;">TOTAL</span>
-                    <span id="ncp_totalPay" style="flex:1;color:#34d399;"></span>
-                    <span id="ncp_totalPayout" style="flex:1;color:#f59e0b;"></span>
-                    <span style="width:60px;"></span>
+                <div id="ncp_total" style="display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(243,156,18,0.07);border-top:1px solid var(--border);font-size:0.82rem;font-weight:800;">
+                    <span style="width:26px;"></span>
+                    <span style="flex:1.4;color:#f39c12;">TOTAL</span>
+                    <span id="ncp_totalPay" style="flex:1.2;color:#34d399;"></span>
+                    <span id="ncp_totalPayout" style="flex:1.2;color:#f59e0b;"></span>
+                    <span style="width:52px;"></span>
                 </div>
 
                 <!-- Print + Save buttons -->
@@ -1555,11 +1555,11 @@ function ncpGenerate(savedRows){
         div.className = 'ncp-row';
         div.style.cssText = 'display:flex;gap:4px;align-items:center;';
         div.innerHTML = `
-            <span style="width:30px;font-size:0.65rem;color:var(--text-dim);font-weight:700;text-align:center;flex-shrink:0;">${i+1}</span>
-            <span class="ncp-due" style="flex:1.2;font-size:0.62rem;color:#a5b4fc;white-space:nowrap;">${dueStr}</span>
-            <input type="number" class="ncp-pay form-input" value="${monthlyPay||''}" placeholder="Monthly Pay" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
-            <input type="number" class="ncp-chit form-input" value="" placeholder="Chit Payout" style="flex:1;margin-bottom:0;padding:6px 7px;font-size:0.72rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
-            <span class="ncp-pct" style="width:60px;text-align:center;font-size:0.68rem;font-weight:800;color:var(--text-dim);">—</span>`;
+            <span style="width:26px;font-size:0.75rem;color:var(--text-dim);font-weight:700;text-align:center;flex-shrink:0;">${i+1}</span>
+            <span class="ncp-due" style="flex:1.4;font-size:0.78rem;color:#a5b4fc;white-space:nowrap;">${dueStr}</span>
+            <input type="number" class="ncp-pay form-input" value="${monthlyPay||''}" placeholder="Monthly Pay" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
+            <input type="number" class="ncp-chit form-input" value="" placeholder="Chit Payout" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
+            <span class="ncp-pct" style="width:52px;text-align:center;font-size:0.78rem;font-weight:800;color:var(--text-dim);">—</span>`;
         rowsEl.appendChild(div);
     }
     // Restore saved pay/chit values if available
@@ -1604,30 +1604,29 @@ function ncpPrint(){
         const pctNum = totalPay>0 ? (cp/totalPay)*100 : 0;
         const pctColor = pctNum>=100?'#065f46':pctNum>=80?'#92400e':'#991b1b';
         return `<tr style="background:${i%2===0?'#f9fafb':'#fff'};">
-            <td style="text-align:center;color:#888;font-weight:700;">${i+1}</td>
-            <td>${due}</td>
+            <td style="text-align:center;color:#888;font-weight:800;font-size:13px;">${i+1}</td>
+            <td style="font-weight:600;">${due}</td>
             <td style="color:#065f46;font-weight:700;">&#8377;${mp.toLocaleString('en-IN')}</td>
             <td style="color:#92400e;font-weight:700;">${cp?'&#8377;'+cp.toLocaleString('en-IN'):'—'}</td>
             <td style="text-align:center;font-weight:800;color:${pctColor};">${pct!=='—'?pct+'%':'—'}</td>
-            <td style="text-align:center;color:#ccc;font-size:8px;">____________________</td>
         </tr>`;
     }).join('');
     const printHTML=`<div id="gsContent">
     <style>
         #gsContent{font-family:Arial,sans-serif;color:#111;max-width:820px;margin:0 auto;padding:16px;}
         #gsContent .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #f39c12;padding-bottom:10px;margin-bottom:14px;}
-        #gsContent .brand{font-size:20px;font-weight:900;color:#f39c12;}
-        #gsContent .info-box{background:#fffbf0;border:2px solid #f39c12;border-radius:8px;padding:12px 16px;margin-bottom:12px;}
-        #gsContent .chip{background:#fff;padding:6px 10px;font-size:9px;text-align:center;}
-        #gsContent .chip-v{font-size:13px;font-weight:800;margin-bottom:1px;}
-        #gsContent .chip-l{font-size:8px;color:#888;text-transform:uppercase;}
-        #gsContent table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:10px;}
+        #gsContent .brand{font-size:22px;font-weight:900;color:#f39c12;}
+        #gsContent .info-box{background:#fffbf0;border:2px solid #f39c12;border-radius:8px;padding:14px 18px;margin-bottom:14px;}
+        #gsContent .chip{background:#fff;padding:8px 10px;font-size:11px;text-align:center;}
+        #gsContent .chip-v{font-size:15px;font-weight:800;margin-bottom:2px;}
+        #gsContent .chip-l{font-size:9px;color:#888;text-transform:uppercase;}
+        #gsContent table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;table-layout:auto;}
         #gsContent thead tr{background:#fef3c7;}
-        #gsContent th{border:1px solid #d1a832;padding:6px 8px;font-size:8px;text-transform:uppercase;color:#555;font-weight:800;}
-        #gsContent td{border:1px solid #e5e7eb;padding:6px 8px;}
-        #gsContent tfoot td{background:#fff8e1;font-weight:800;border-top:2px solid #f39c12;}
-        #gsContent .notice{background:#fffbe6;border:1px solid #f5d060;border-radius:6px;padding:10px 14px;font-size:8.5px;color:#555;margin-bottom:12px;line-height:1.6;}
-        #gsContent .ftr{margin-top:14px;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between;font-size:8px;color:#aaa;}
+        #gsContent th{border:1px solid #d1a832;padding:8px 10px;font-size:11px;text-transform:uppercase;color:#555;font-weight:800;}
+        #gsContent td{border:1px solid #e5e7eb;padding:8px 10px;font-size:12px;}
+        #gsContent tfoot td{background:#fff8e1;font-weight:800;border-top:2px solid #f39c12;font-size:12px;}
+        #gsContent .notice{background:#fffbe6;border:1px solid #f5d060;border-radius:6px;padding:10px 14px;font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;}
+        #gsContent .ftr{margin-top:14px;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#aaa;}
         #gsContent .pbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
         #gsContent .pbtn{background:linear-gradient(90deg,#f39c12,#f57c00);color:#000;border:none;padding:10px 24px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;}
         #gsContent .cbtn{background:#eee;color:#333;border:none;padding:10px 18px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;}
@@ -1669,18 +1668,17 @@ function ncpPrint(){
     <div class="notice">&#128161; <b>How this Chit Works:</b> This group runs for <b>${duration} months</b> with <b>${members||'?'} members</b>. Monthly pay increases gradually. Every member wins once over the full cycle.</div>
     <table>
         <thead><tr>
-            <th style="width:5%;text-align:center;">Month #</th>
-            <th style="width:18%;">Due Date</th>
-            <th style="width:22%;">Monthly Pay<br><span style="font-weight:400;font-size:7px;">(Amount each member pays)</span></th>
-            <th style="width:22%;">Chit Payout<br><span style="font-weight:400;font-size:7px;">(Prize the winner receives)</span></th>
-            <th style="width:13%;text-align:center;">% Return<br><span style="font-weight:400;font-size:7px;">(if picked this month)</span></th>
-            <th style="width:20%;text-align:center;">Chit Won By</th>
+            <th style="width:8%;text-align:center;">Month #</th>
+            <th style="width:25%;">Due Date</th>
+            <th style="width:30%;">Monthly Pay<br><span style="font-weight:400;font-size:9px;">(Amount each member pays)</span></th>
+            <th style="width:25%;">Chit Payout<br><span style="font-weight:400;font-size:9px;">(Prize the winner receives)</span></th>
+            <th style="width:12%;text-align:center;">% Return</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
-            <td colspan="2" style="text-align:right;padding-right:10px;font-size:8px;">GRAND TOTAL</td>
-            <td>&#8377;${totalPay.toLocaleString('en-IN')}</td>
-            <td></td><td></td><td></td>
+            <td colspan="2" style="text-align:right;padding-right:10px;font-size:11px;font-weight:800;">GRAND TOTAL</td>
+            <td style="font-size:13px;font-weight:900;color:#065f46;">&#8377;${totalPay.toLocaleString('en-IN')}</td>
+            <td></td><td></td>
         </tr></tfoot>
     </table>
     <div class="ftr"><span>AK Chit Funds &bull; Admin Portal</span><span>${name} &bull; ${today}</span><span>CONFIDENTIAL</span></div>
