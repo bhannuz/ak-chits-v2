@@ -422,6 +422,7 @@
         <label class="form-label-small">Group / Enrollment</label>
         <select id="pGroup" class="form-input"><option value="">-- Select Member First --</option></select>
         <input type="hidden" id="pEnrollmentId">
+        <input type="hidden" id="pSlotNum" value="1">
 
         <label class="form-label-small">Payment Type</label>
         <select id="pNumMonths" class="form-input" onchange="onNumMonthsChange()">
@@ -1184,18 +1185,28 @@ async function linkGroupForPayment(){
     const ms=await getCollection('members');const m=ms.find(x=>x.id===mid);if(!m)return;
     const gs=await getCollection('groups');
 
-    // Build options from enrollments (supports same group multiple times)
+    // Build options from enrollments — show slot-wise only if qty > 1
     let opts='';
     if(m.enrollments && m.enrollments.length){
         opts = m.enrollments.map(e=>{
             const g=gs.find(x=>x.id===e.groupId);
-            if(!g)return'';
-            const dispLabel = e.label ? ` (${e.label})` : '';
-            return `<option value="${e.groupId}" data-enrollment-id="${e.enrollmentId}">${g.name}${dispLabel}</option>`;
+            if(!g) return '';
+            const qty = parseInt(e.qty||1);
+            if(qty > 1){
+                // Show one option per chit slot
+                return Array.from({length:qty},(_,i)=>{
+                    const slotLabel = e.label ? `${e.label} — Chit ${i+1}` : `Chit ${i+1} of ${qty}`;
+                    return `<option value="${e.groupId}" data-enrollment-id="${e.enrollmentId}" data-slot="${i+1}">${g.name} (${slotLabel})</option>`;
+                }).join('');
+            } else {
+                // Single chit — show plain, no slot suffix
+                const dispLabel = e.label ? ` (${e.label})` : '';
+                return `<option value="${e.groupId}" data-enrollment-id="${e.enrollmentId}" data-slot="1">${g.name}${dispLabel}</option>`;
+            }
         }).join('');
     } else {
         // Legacy fallback
-        opts = gs.filter(g=>m.groupIds&&m.groupIds.includes(g.id)).map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+        opts = gs.filter(g=>m.groupIds&&m.groupIds.includes(g.id)).map(g=>`<option value="${g.id}" data-slot="1">${g.name}</option>`).join('');
     }
     document.getElementById('pGroup').innerHTML = opts || '<option value="">No groups assigned</option>';
 
@@ -1204,11 +1215,13 @@ async function linkGroupForPayment(){
     sel.onchange = function(){
         const chosen = sel.options[sel.selectedIndex];
         document.getElementById('pEnrollmentId').value = chosen ? (chosen.dataset.enrollmentId||'') : '';
+        document.getElementById('pSlotNum').value = chosen ? (chosen.dataset.slot||'1') : '1';
         onGroupChange();
     };
-    // Set initial enrollmentId
+    // Set initial enrollmentId + slot
     const first = sel.options[sel.selectedIndex];
     document.getElementById('pEnrollmentId').value = first ? (first.dataset.enrollmentId||'') : '';
+    document.getElementById('pSlotNum').value = first ? (first.dataset.slot||'1') : '1';
     await onGroupChange();
 }
 
@@ -1265,8 +1278,9 @@ async function savePayment(){
         const totalChit=chitPerMonth*numMonths;
         const balance=Math.max(0,totalChit-paid);
         const enrollmentId1 = document.getElementById('pEnrollmentId').value||'';
+        const slotNum1 = parseInt(document.getElementById('pSlotNum').value||'1');
         await db.collection('payments').add({
-            memberId:mid, groupId:gid, enrollmentId:enrollmentId1, date,
+            memberId:mid, groupId:gid, enrollmentId:enrollmentId1, slotNum:slotNum1, date,
             chit:chitPerMonth, paid, balance, paidBy, chitPicked, chitPickedBy,
             numMonths, monthSlots, monthSlot:monthSlots[0],
             paidPerMonth:paid/numMonths, balPerMonth:balance/numMonths
@@ -1280,8 +1294,9 @@ async function savePayment(){
         const slotIdx=getMonthSlot(dueDates,date);
         const balance=Math.max(0,chitPerMonth-paid);
         const enrollmentId2 = document.getElementById('pEnrollmentId').value||'';
+        const slotNum2 = parseInt(document.getElementById('pSlotNum').value||'1');
         await db.collection('payments').add({
-            memberId:mid, groupId:gid, enrollmentId:enrollmentId2, date,
+            memberId:mid, groupId:gid, enrollmentId:enrollmentId2, slotNum:slotNum2, date,
             chit:chitPerMonth, paid, balance, paidBy, chitPicked, chitPickedBy,
             numMonths:1, monthSlot:slotIdx>=0?slotIdx:null,
             monthSlots:slotIdx>=0?[slotIdx]:[]
