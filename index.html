@@ -845,8 +845,11 @@ async function loadMemberLedger(){
         enrollments=(m.groupIds||[]).map(gid=>({enrollmentId:'',groupId:gid,label:''}));
     }
     const memberGroups=gs.filter(g=>m.groupIds&&m.groupIds.includes(g.id));
+    // helper: get qty for an enrollment
+    function enrQtyFor(enr){ return parseInt(enr.qty||1); }
 
     const payTablesHtml=enrollments.map((enr,gi)=>{
+        const enrQty = parseInt(enr.qty||1);
         const grp=gs.find(g=>g.id===enr.groupId);if(!grp)return'';
         // Match payments: if enrollmentId exists use it, else match by groupId (legacy)
         const pays=mPays.filter(p=>{
@@ -902,7 +905,7 @@ async function loadMemberLedger(){
         return`<div style="margin-bottom:12px;">
             <div style="background:#1c253b;border-radius:12px 12px 0 0;padding:10px 14px;border:1px solid var(--border);border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
                 <div>
-                    <div style="font-size:0.8rem;font-weight:800;color:#f39c12;margin-bottom:4px;">📂 ${grp.name}${enr.label?` <span style="font-size:0.65rem;background:rgba(243,156,18,.18);border:1px solid rgba(243,156,18,.35);border-radius:5px;padding:1px 6px;color:#f39c12;">${enr.label}</span>`:''}</div>
+                    <div style="font-size:0.8rem;font-weight:800;color:#f39c12;margin-bottom:4px;">📂 ${grp.name}${enr.label?` <span style="font-size:0.65rem;background:rgba(243,156,18,.18);border:1px solid rgba(243,156,18,.35);border-radius:5px;padding:1px 6px;color:#f39c12;">${enr.label}</span>`:''} ${(parseInt(enr.qty||1)>1)?`<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:800;">×${enr.qty} chits</span>`:''}</div>
                     <div style="display:flex;gap:5px;flex-wrap:wrap;">
                         <span style="font-size:0.58rem;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:5px;padding:1px 6px;color:#a5b4fc;">🗓 Started: ${gStartDisplay}</span>
                         ${grp.dueDay?`<span style="font-size:0.58rem;background:rgba(243,156,18,.12);border:1px solid rgba(243,156,18,.3);border-radius:5px;padding:1px 6px;color:#f39c12;">📅 Due: ${gDueDayOrd}</span>`:''}
@@ -1385,7 +1388,15 @@ async function renderGroupsTab(){
         if(g.startDate||g.gStart){const _s=new Date(g.startDate||g.gStart),_n=new Date();elapsed=Math.max(0,Math.min(totalMonths,(_n.getFullYear()-_s.getFullYear())*12+(_n.getMonth()-_s.getMonth())+1));}
         const left=Math.max(0,totalMonths-elapsed);const pct=Math.min(100,Math.round(elapsed/totalMonths*100));
 
-        const memberRows=gMs.map((m,i)=>{
+        // Expand members by qty — each chit slot = one row
+        const expandedSlots=[];
+        gMs.forEach(m=>{
+            const enr=(m.enrollments||[]).find(e=>e.groupId===g.id);
+            const qty=enr?parseInt(enr.qty||1):1;
+            for(let q=0;q<qty;q++) expandedSlots.push({m,slotNum:q+1,totalSlots:qty});
+        });
+        const totalSlots=expandedSlots.length;
+        const memberRows=expandedSlots.map(({m,slotNum,totalSlots},i)=>{
             const mp=ps.filter(p=>p.memberId===m.id&&p.groupId===g.id);
             const paid=mp.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
             const bal=mp.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
@@ -1393,17 +1404,23 @@ async function renderGroupsTab(){
             const pickedAmt=pickedPay?(parseFloat(pickedPay.chit)||0)*(parseInt(pickedPay.numMonths)||1):0;
             const pickedBy=pickedPay&&pickedPay.chitPickedBy?pickedPay.chitPickedBy:'';
             const monthsCovered=mp.reduce((s,p)=>s+(p.numMonths||1),0);
-            return`<tr${pickedPay?' class="chit-picked"':''}>
-                <td>${i+1}</td>
-                <td><strong>${m.name}</strong><br><span style="font-size:0.6rem;color:var(--text-dim);">${m.phone||''}</span></td>
-                <td style="color:#34d399;">${fmtAmt(paid)}</td>
-                <td style="color:#f59e0b;">${fmtAmt(bal)}</td>
-                <td style="color:#a5b4fc;font-size:0.65rem;">${monthsCovered}/${totalMonths}</td>
-                <td>${pickedPay
+            const multiChitBadge=totalSlots>1?`<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 6px;font-size:0.55rem;font-weight:800;margin-left:4px;">×${totalSlots} chits</span>`:'';
+            const slotLabel=totalSlots>1?`<span style="font-size:0.58rem;color:#f59e0b;"> (Chit ${slotNum})</span>`:'';
+            const row = [
+                `<tr${pickedPay?' class="chit-picked"':''}>`,
+                `<td>${i+1}</td>`,
+                `<td><strong>${m.name}</strong>${multiChitBadge}${slotLabel}<br><span style="font-size:0.6rem;color:var(--text-dim);">${m.phone||''}</span></td>`,
+                `<td style="color:#34d399;">${fmtAmt(paid)}</td>`,
+                `<td style="color:#f59e0b;">${fmtAmt(bal)}</td>`,
+                `<td style="color:#a5b4fc;font-size:0.65rem;">${monthsCovered}/${totalMonths}</td>`,
+                `<td>${pickedPay
                     ?`<div><span class="chit-yes-badge">✅ Picked</span><div style="color:#34d399;font-weight:800;font-size:0.72rem;margin-top:3px;">${fmtAmt(pickedAmt)}</div>${pickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);">by ${pickedBy}</div>`:''}</div>`
-                    :'<span class="chit-no">—</span>'}</td>
-                <td><button class="btn-edit-sm" onclick="openEditMember('${m.id}')">✏️</button></td>
-            </tr>`;}).join('');
+                    :'<span class="chit-no">—</span>'}</td>`,
+                `<td><button class="btn-edit-sm" onclick="openEditMember('${m.id}')">✏️</button></td>`,
+                `</tr>`
+            ].join('');
+            return row;
+        }).join('');
 
         const gStartDisp=fmtDate(g.startDate||g.gStart||'');
         const gDueDayDisp=g.dueDay?`${g.dueDay}${['st','nd','rd'][((g.dueDay%100-11)%10)-1]||'th'} of month`:'—';
@@ -1413,7 +1430,7 @@ async function renderGroupsTab(){
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div>
                         <div style="font-size:1rem;font-weight:800;color:#f39c12;">📂 ${g.name}</div>
-                        <div style="font-size:0.68rem;color:var(--text-dim);">${gMs.length} members · ${gPays.length} payment entries</div>
+                        <div style="font-size:0.68rem;color:var(--text-dim);">${(()=>{const slots=gMs.reduce((s,m)=>{const e=(m.enrollments||[]).find(x=>x.groupId===g.id);return s+(e?parseInt(e.qty||1):1);},0);const uniq=gMs.length;return slots===uniq?slots+' members':slots+' chit slots ('+uniq+' members)';})()}  · ${gPays.length} payment entries</div>
                         <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
                             <span style="font-size:0.62rem;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:6px;padding:2px 7px;color:#a5b4fc;">🗓 Started: ${gStartDisp}</span>
                             ${g.dueDay?`<span style="font-size:0.62rem;background:rgba(243,156,18,.12);border:1px solid rgba(243,156,18,.3);border-radius:6px;padding:2px 7px;color:#f39c12;">📅 Due: ${gDueDayDisp}</span>`:''}
@@ -1478,17 +1495,25 @@ async function renderListTab(){
         return`<div class="list-group-header" onclick="toggleListGroup('${listId}',this)">
             <span>${g.name}</span>
             <span style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:0.72rem;color:var(--text-dim);">${gMs.length} members</span>
+                <span style="font-size:0.72rem;color:var(--text-dim);">${(()=>{const s=gMs.reduce((t,m)=>{const e=(m.enrollments||[]).find(x=>x.groupId===g.id);return t+(e?parseInt(e.qty||1):1);},0);return s===gMs.length?s+' members':s+' slots';})()}</span>
                 <span class="list-chevron" style="font-size:0.8rem;color:var(--text-dim);transition:transform .25s;transform:rotate(-90deg);">▼</span>
             </span>
         </div>
         <div id="${listId}" style="display:none;">
-            ${gMs.map((m,i)=>`<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;">
-                <span style="width:28px;color:var(--text-dim);font-size:0.72rem;">${i+1}.</span>
-                <span style="flex:1;font-size:0.9rem;">${m.name}</span>
-                <span style="font-size:0.72rem;color:var(--text-dim);">${m.phone||''}</span>
-                <button class="btn-edit-sm" onclick="openEditMember('${m.id}')">✏️</button>
-            </div>`).join('')}
+            ${(()=>{
+                const slots=[];
+                gMs.forEach(m=>{
+                    const enr=(m.enrollments||[]).find(e=>e.groupId===g.id);
+                    const qty=enr?parseInt(enr.qty||1):1;
+                    for(let q=0;q<qty;q++) slots.push({m,slotNum:q+1,totalSlots:qty});
+                });
+                return slots.map(({m,slotNum,totalSlots},i)=>`<div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;">
+                    <span style="width:28px;color:var(--text-dim);font-size:0.72rem;">${i+1}.</span>
+                    <span style="flex:1;font-size:0.9rem;">${m.name}${totalSlots>1?` <span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 6px;font-size:0.62rem;font-weight:800;">Chit ${slotNum}/${totalSlots}</span>`:''}</span>
+                    <span style="font-size:0.72rem;color:var(--text-dim);">${m.phone||''}</span>
+                    <button class="btn-edit-sm" onclick="openEditMember('${m.id}')">✏️</button>
+                </div>`).join('');
+            })()}
         </div>`;
     }).join('')||'<div style="text-align:center;color:var(--text-dim);padding:40px;">No groups yet.</div>';
 }
@@ -1863,7 +1888,7 @@ async function printMemberStatement(mid){
         }).join('');
 
         return `<div class="grp-block">
-            <div class="grp-title">&#128194; ${g.name}${enr.label?' <span style="background:#fff3cd;color:#92400e;border-radius:3px;padding:1px 5px;font-size:9px;">'+enr.label+'</span>':''}</div>
+            <div class="grp-title">&#128194; ${g.name}${enr.label?' <span style="background:#fff3cd;color:#92400e;border-radius:3px;padding:1px 5px;font-size:9px;">'+enr.label+'</span>':''} ${parseInt(enr.qty||1)>1?'<span style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:800;">×'+enr.qty+' chits</span>':''}</div>
             <div class="grp-meta">Start: <b>${gStartDisp}</b> &nbsp;|&nbsp; Due: <b>${gDueDayDisp}</b> &nbsp;|&nbsp; Month <b>${elapsed}/${totalMonths}</b> &nbsp;|&nbsp; Covered: <b>${totalMonthsCovered}/${totalMonths}</b> &nbsp;|&nbsp; <b>${left} pending</b></div>
             <div class="prog-outer"><div class="prog-inner" style="width:${pct}%"></div></div>
             <div class="grp-totals">Paid: <b style="color:#065f46;">Rs.${gPaid.toLocaleString('en-IN')}</b> &nbsp;&nbsp; Balance: <b style="color:#92400e;">Rs.${gBal.toLocaleString('en-IN')}</b></div>
@@ -1934,7 +1959,7 @@ async function printMemberStatement(mid){
                 <div>
                     <div class="mname">${m.name}</div>
                     <div class="msub">&#128222; ${m.phone||'—'}</div>
-                    <div class="msub">Groups: ${enrollments.map(e=>{const g=gs.find(x=>x.id===e.groupId);return g?(g.name+(e.label?' ('+e.label+')':'')):'?';}).join(', ')||'—'}</div>
+                    <div class="msub">Groups: ${enrollments.map(e=>{const g=gs.find(x=>x.id===e.groupId);const q=parseInt(e.qty||1);return g?(g.name+(e.label?' ('+e.label+')':'')+(q>1?' ×'+q+'chits':'')):'?';}).join(', ')||'—'}</div>
                 </div>
                 <div class="stats">
                     <div class="stat"><div class="stat-v" style="color:#065f46;">Rs.${totalPaid.toLocaleString('en-IN')}</div><div class="stat-l">Total Paid</div></div>
