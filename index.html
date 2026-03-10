@@ -1010,11 +1010,11 @@ async function openEditMember(mid){
         // Migrate legacy groupIds
         enrollments = (m.groupIds||[]).map(gid=>({enrollmentId: genEnrollId(), groupId: gid, label:''}));
     }
-    enrollments.forEach(e=> addEnrollmentRow(e.groupId, e.label, e.enrollmentId));
+    enrollments.forEach(e=> addEnrollmentRow(e.groupId, e.label, e.enrollmentId, e.qty||1));
     openModal('memberModal');
 }
 
-function addEnrollmentRow(groupId='', label='', enrollmentId=''){
+function addEnrollmentRow(groupId='', label='', enrollmentId='', qty=1){
     const id = enrollmentId || genEnrollId();
     const opts = _enrollGroupOptions.map(g=>`<option value="${g.id}" ${g.id===groupId?'selected':''}>${g.name}</option>`).join('');
     const row = document.createElement('div');
@@ -1022,11 +1022,16 @@ function addEnrollmentRow(groupId='', label='', enrollmentId=''){
     row.dataset.enrollmentId = id;
     row.style.cssText='display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:8px 10px;';
     row.innerHTML=`
-        <select class="enr-group form-input" style="flex:2;margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
+        <select class="enr-group form-input" style="flex:3;margin-bottom:0;padding:8px 10px;font-size:0.82rem;">
             <option value="">-- Select Group --</option>${opts}
         </select>
-        <input type="text" class="enr-label form-input" placeholder="Label (optional, e.g. Round 2)" value="${label}"
-            style="flex:2;margin-bottom:0;padding:8px 10px;font-size:0.82rem;" title="Add a label to distinguish if same group enrolled twice">
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <span style="font-size:0.5rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;white-space:nowrap;">Chits</span>
+            <input type="number" class="enr-qty form-input" min="1" max="20" value="${qty||1}"
+                style="width:54px;margin-bottom:0;padding:8px 6px;font-size:0.85rem;text-align:center;font-weight:800;" title="Number of chits this member takes in this group">
+        </div>
+        <input type="text" class="enr-label form-input" placeholder="Label (e.g. Chit 1)" value="${label}"
+            style="flex:2;margin-bottom:0;padding:8px 10px;font-size:0.82rem;" title="Label to distinguish multiple chits in same group">
         <button type="button" onclick="this.closest('.enrollment-row').remove()"
             style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:8px;padding:6px 10px;font-size:0.85rem;cursor:pointer;flex-shrink:0;">✕</button>`;
     document.getElementById('enrollmentList').appendChild(row);
@@ -1049,7 +1054,8 @@ async function saveMember(){
         const lbl = row.querySelector('.enr-label').value.trim();
         const eid2 = row.dataset.enrollmentId;
         if(!gid){ valid=false; return; }
-        enrollments.push({enrollmentId:eid2, groupId:gid, label:lbl});
+        const qty = parseInt(row.querySelector('.enr-qty')?.value)||1;
+        enrollments.push({enrollmentId:eid2, groupId:gid, label:lbl, qty});
         if(!groupIds.includes(gid)) groupIds.push(gid);
     });
     if(!valid || enrollments.length===0) return showToast('❌ Select a group for each enrollment row',false);
@@ -2254,21 +2260,34 @@ async function pollPendingRequests(){
 // ══════════════════════════════════════════
 // CHIT PLANNER — MULTI-PLANNER SYSTEM
 // ══════════════════════════════════════════
+// CHIT PLANNER — FIRESTORE-BACKED MULTI-DEVICE
+// ══════════════════════════════════════════
 const NCP_FIELDS = ['ncp_name','ncp_member','ncp_amount','ncp_members','ncp_duration','ncp_start','ncp_dueday'];
-const NCP_STORAGE_KEY = 'akdf_ncp_planners';
-const NCP_ACTIVE_KEY  = 'akdf_ncp_active';
-let ncpActivePlannerKey = null; // key of currently loaded planner
+const NCP_ACTIVE_LS = 'akdf_ncp_active_key'; // only active key stored locally
+let ncpActivePlannerKey = null;
+let _ncpCache = null; // in-memory cache to avoid redundant Firestore reads
 
-// ── Helpers ──────────────────────────────
-function ncpGetAllPlanners(){
-    try { return JSON.parse(localStorage.getItem(NCP_STORAGE_KEY)) || {}; }
-    catch(e){ return {}; }
+// ── Firestore helpers ─────────────────────
+async function ncpFSDoc(){ return db.collection('chit_planners').doc('all_planners'); }
+
+async function ncpGetAllPlanners(){
+    if(_ncpCache) return _ncpCache;
+    try {
+        const doc = await (await ncpFSDoc()).get();
+        _ncpCache = doc.exists ? (doc.data().planners || {}) : {};
+        return _ncpCache;
+    } catch(e){ return _ncpCache || {}; }
 }
-function ncpSetAllPlanners(obj){ localStorage.setItem(NCP_STORAGE_KEY, JSON.stringify(obj)); }
+
+async function ncpSetAllPlanners(obj){
+    _ncpCache = obj;
+    try { await (await ncpFSDoc()).set({ planners: obj }, { merge: false }); }
+    catch(e){ console.warn('NCP Firestore save failed', e); }
+}
 
 function ncpReadCurrentForm(){
     const data = {};
-    NCP_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+    NCP_FIELDS.forEach(id => { data[id] = document.getElementById(id)?.value || ''; });
     const rows = document.querySelectorAll('#ncp_rows .ncp-row');
     if(rows.length){
         data._rows = Array.from(rows).map(row => ({
@@ -2293,79 +2312,79 @@ function ncpFillForm(data){
     }
 }
 
-// ── Auto-save current planner draft ──────
+// ── Auto-save (debounced, updates active planner) ──
+let _ncpAutoSaveTimer = null;
 function ncpAutoSave(){
-    // Always save draft to temp key so nothing is lost
-    const data = ncpReadCurrentForm();
-    data._label = document.getElementById('ncp_version_label').value;
-    localStorage.setItem('akdf_ncp_draft', JSON.stringify(data));
-    // Also update the active saved planner if one is loaded
-    if(ncpActivePlannerKey){
-        const planners = ncpGetAllPlanners();
-        if(planners[ncpActivePlannerKey]){
-            planners[ncpActivePlannerKey] = { ...planners[ncpActivePlannerKey], ...data };
-            ncpSetAllPlanners(planners);
-        }
-    }
+    clearTimeout(_ncpAutoSaveTimer);
+    _ncpAutoSaveTimer = setTimeout(async ()=>{
+        if(!ncpActivePlannerKey) return;
+        const planners = await ncpGetAllPlanners();
+        if(!planners[ncpActivePlannerKey]) return;
+        const data = ncpReadCurrentForm();
+        planners[ncpActivePlannerKey] = { ...planners[ncpActivePlannerKey], ...data };
+        await ncpSetAllPlanners(planners);
+    }, 1500);
 }
 
 // ── Save / Overwrite a version ────────────
-function ncpSaveVersion(){
+async function ncpSaveVersion(){
     const label = document.getElementById('ncp_version_label').value.trim();
     if(!label){ showToast('❌ Enter a version name to save', false); return; }
-    const planners = ncpGetAllPlanners();
+    showToast('⏳ Saving…', true);
+    const planners = await ncpGetAllPlanners();
     const key = 'planner_' + label.replace(/\s+/g,'_').toLowerCase();
     const isNew = !planners[key];
     const data = ncpReadCurrentForm();
     data._label = label;
     data._savedAt = new Date().toLocaleString('en-IN');
     planners[key] = data;
-    ncpSetAllPlanners(planners);
+    await ncpSetAllPlanners(planners);
     ncpActivePlannerKey = key;
-    localStorage.setItem(NCP_ACTIVE_KEY, key);
-    ncpRenderSavedList();
-    showToast(isNew ? '✅ Planner saved as "' + label + '"' : '🔄 Planner "' + label + '" overwritten', true);
+    localStorage.setItem(NCP_ACTIVE_LS, key);
+    ncpRenderSavedList(planners);
+    showToast(isNew ? '✅ Saved as "' + label + '"' : '🔄 "' + label + '" overwritten', true);
 }
 
-// ── Overwrite active planner directly ────
-function ncpOverwriteActive(){
-    if(!ncpActivePlannerKey){ showToast('❌ No active planner to overwrite', false); return; }
-    const planners = ncpGetAllPlanners();
+// ── Overwrite active planner ──────────────
+async function ncpOverwriteActive(){
+    if(!ncpActivePlannerKey){ showToast('❌ No active planner', false); return; }
+    const planners = await ncpGetAllPlanners();
     if(!planners[ncpActivePlannerKey]){ showToast('❌ Planner not found', false); return; }
     const label = planners[ncpActivePlannerKey]._label || ncpActivePlannerKey;
+    showToast('⏳ Saving…', true);
     const data = ncpReadCurrentForm();
     data._label = label;
     data._savedAt = new Date().toLocaleString('en-IN');
     planners[ncpActivePlannerKey] = data;
-    ncpSetAllPlanners(planners);
-    ncpRenderSavedList();
-    showToast('🔄 "' + label + '" overwritten successfully', true);
+    await ncpSetAllPlanners(planners);
+    ncpRenderSavedList(planners);
+    showToast('🔄 "' + label + '" overwritten', true);
 }
 
 // ── New blank planner ─────────────────────
-function ncpNewPlanner(){
+async function ncpNewPlanner(){
     ncpActivePlannerKey = null;
-    localStorage.removeItem(NCP_ACTIVE_KEY);
-    NCP_FIELDS.forEach(id => { document.getElementById(id).value = ''; });
+    localStorage.removeItem(NCP_ACTIVE_LS);
+    NCP_FIELDS.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.getElementById('ncp_version_label').value = '';
     document.getElementById('ncp_tableWrap').style.display = 'none';
     document.getElementById('ncp_rows').innerHTML = '';
-    ncpRenderSavedList();
+    const planners = await ncpGetAllPlanners();
+    ncpRenderSavedList(planners);
     showToast('📋 New blank planner ready', true);
 }
 
 // ── Load a saved planner ──────────────────
-function ncpLoadPlanner(key){
-    const planners = ncpGetAllPlanners();
+async function ncpLoadPlanner(key){
+    const planners = await ncpGetAllPlanners();
     const data = planners[key];
     if(!data) return;
     ncpActivePlannerKey = key;
-    localStorage.setItem(NCP_ACTIVE_KEY, key);
+    localStorage.setItem(NCP_ACTIVE_LS, key);
     document.getElementById('ncp_version_label').value = data._label || '';
     ncpFillForm(data);
-    ncpRenderSavedList();
+    ncpRenderSavedList(planners);
     showToast('📂 Loaded "' + (data._label||key) + '"', true);
-    // Scroll planner into view
     setTimeout(()=>{
         const el = document.getElementById('newChitPlanner');
         if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
@@ -2373,21 +2392,20 @@ function ncpLoadPlanner(key){
 }
 
 // ── Delete a saved planner ────────────────
-function ncpDeletePlanner(key){
-    const planners = ncpGetAllPlanners();
+async function ncpDeletePlanner(key){
+    const planners = await ncpGetAllPlanners();
     const label = planners[key]?._label || key;
     if(!confirm('Delete planner "' + label + '"?')) return;
     delete planners[key];
-    ncpSetAllPlanners(planners);
-    if(ncpActivePlannerKey === key){ ncpNewPlanner(); }
-    else { ncpRenderSavedList(); }
+    await ncpSetAllPlanners(planners);
+    if(ncpActivePlannerKey === key){ await ncpNewPlanner(); }
+    else { ncpRenderSavedList(planners); }
     showToast('🗑️ Deleted "' + label + '"', false);
 }
 
 // ── Render saved planners list ────────────
-function ncpRenderSavedList(){
-    const planners = ncpGetAllPlanners();
-    const keys = Object.keys(planners);
+function ncpRenderSavedList(planners){
+    const keys = Object.keys(planners||{});
     const el = document.getElementById('ncpSavedList');
     if(!keys.length){ el.innerHTML = ''; return; }
     el.innerHTML = `
@@ -2400,7 +2418,7 @@ function ncpRenderSavedList(){
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:0.82rem;font-weight:800;color:${isActive?'#a5b4fc':'white'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isActive?'✏️ ':''}${p._label||k}</div>
                     <div style="font-size:0.58rem;color:var(--text-dim);margin-top:2px;">${p.ncp_name||'—'} &nbsp;·&nbsp; ${p.ncp_members||'?'} members &nbsp;·&nbsp; ${p.ncp_duration||'?'} months &nbsp;·&nbsp; ₹${p.ncp_amount?Number(p.ncp_amount).toLocaleString('en-IN'):'?'}</div>
-                    <div style="font-size:0.55rem;color:var(--text-dim);margin-top:1px;">Saved: ${p._savedAt||'—'}</div>
+                    <div style="font-size:0.55rem;color:var(--text-dim);margin-top:1px;">💾 ${p._savedAt||'—'}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
                     ${!isActive
@@ -2414,34 +2432,20 @@ function ncpRenderSavedList(){
         </div>`;
 }
 
-// ── Restore last active planner on load ───
-function ncpRestoreSession(){
-    const lastKey = localStorage.getItem(NCP_ACTIVE_KEY);
-    const planners = ncpGetAllPlanners();
-    ncpRenderSavedList();
+// ── Restore session on load ───────────────
+async function ncpRestoreSession(){
+    const planners = await ncpGetAllPlanners();
+    ncpRenderSavedList(planners);
+    const lastKey = localStorage.getItem(NCP_ACTIVE_LS);
     if(lastKey && planners[lastKey]){
         ncpActivePlannerKey = lastKey;
         document.getElementById('ncp_version_label').value = planners[lastKey]._label || '';
         ncpFillForm(planners[lastKey]);
-        ncpRenderSavedList();
-    } else {
-        // Restore unsaved draft if exists
-        try {
-            const draft = localStorage.getItem('akdf_ncp_draft');
-            if(draft){
-                const data = JSON.parse(draft);
-                NCP_FIELDS.forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el && data[id] !== undefined) el.value = data[id];
-                });
-                if(data._label) document.getElementById('ncp_version_label').value = data._label;
-                if(data._tableVisible && data._rows && data._rows.length) ncpGenerate(data._rows);
-            }
-        } catch(e){}
+        ncpRenderSavedList(planners);
     }
 }
 
-// Legacy alias so ncpGenerate still works
+// Legacy alias
 function ncpSave(){ ncpAutoSave(); }
 
 // ══════════════════════════════════════════
