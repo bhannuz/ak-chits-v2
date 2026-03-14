@@ -1799,13 +1799,17 @@ function ncpPrint(){
         <button class="cbtn" onclick="closePrintStatement()">✕ Close</button>
     </div>
     <div class="hdr">
-        <div><div class="brand">&#127942; AK CHIT FUNDS</div><div style="font-size:9px;color:#888;">Chit Fund Management &bull; Official Group Schedule</div></div>
+        <div>
+            <div class="brand">&#127942; AK CHIT FUNDS</div>
+            <div style="font-size:9px;color:#888;">Chit Fund Management &bull; Official Group Schedule</div>
+            ${memberName?`<div style="font-size:12px;font-weight:800;color:#111;margin-top:5px;">&#128100; ${memberName}</div>`:''}
+        </div>
         <div style="text-align:right;"><div style="font-size:13px;font-weight:800;">CHIT SCHEDULE REPORT</div><div style="font-size:9px;color:#888;">Generated: ${today}</div></div>
     </div>
     <div class="info-box">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div style="font-size:16px;font-weight:900;">&#128194; ${name}</div>
-            ${memberName?`<div style="background:#fff8e1;border:1px solid #f5d060;border-radius:6px;padding:4px 10px;font-size:9px;font-weight:700;color:#92400e;white-space:nowrap;">&#128100; Prepared for: ${memberName}</div>`:''}
+
         </div>
         <div style="display:flex;gap:0;border:1px solid #e5c76b;border-radius:8px;overflow:hidden;">
             <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${duration}</div><div class="chip-l">Duration (Months)</div></div>
