@@ -291,7 +291,7 @@
                 </div>
 
                 <!-- Row 2: Duration | Start Date | Due Day -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
                     <div>
                         <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📆 Duration (months)</div>
                         <input id="ncp_duration" type="number" class="form-input" placeholder="e.g. 20" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
@@ -306,7 +306,37 @@
                     </div>
                 </div>
 
-                <button onclick="ncpGenerate()" style="width:100%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:800;cursor:pointer;">⚡ Generate Schedule</button>
+                <!-- Row 3: Profit Parameters -->
+                <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+                    <div style="font-size:0.6rem;font-weight:800;color:#34d399;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">💹 Owner Profit Settings</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+                        <div>
+                            <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📋 Commission % <span style="color:#34d399;">(per month)</span></div>
+                            <input id="ncp_commission" type="number" min="0" max="10" step="0.5" class="form-input" value="5" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;" title="% of chit amount kept by owner each month as foreman fee">
+                        </div>
+                        <div>
+                            <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">📈 Pay Escalation % <span style="color:#f59e0b;">(per month)</span></div>
+                            <input id="ncp_escalation" type="number" min="0" max="5" step="0.5" class="form-input" value="0" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;" title="Monthly increase in member contribution (%). 0 = flat. 1% = each month ₹ increases by 1% over previous.">
+                        </div>
+                        <div>
+                            <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🔢 Payout Mode</div>
+                            <select id="ncp_payoutmode" class="form-input" onchange="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;">
+                                <option value="diminishing">Diminishing (High→Low)</option>
+                                <option value="flat">Flat (Commission only)</option>
+                                <option value="ascending">Ascending (Low→High)</option>
+                                <option value="custom">Custom (manual)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">🎯 Min Payout % <span style="color:#f87171;">(of chit)</span></div>
+                            <input id="ncp_minpayout" type="number" min="50" max="99" step="1" class="form-input" value="70" oninput="ncpAutoSave()" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;" title="Minimum % of chit amount that any winner receives (last months get highest payout)">
+                        </div>
+                    </div>
+                    <!-- Live profit preview -->
+                    <div id="ncp_profitPreview" style="display:none;margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+                </div>
+
+                <button onclick="ncpGenerate()" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:800;cursor:pointer;">⚡ Generate Profitable Schedule</button>
             </div>
 
             <!-- Schedule Table (hidden until generated) -->
@@ -320,20 +350,22 @@
                     <div style="display:flex;gap:4px;margin-bottom:4px;font-size:0.62rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;padding:0 2px;">
                         <span style="width:26px;text-align:center;">#</span>
                         <span style="flex:1.4;">Due Date</span>
-                        <span style="flex:1.2;">Monthly Pay (₹)</span>
+                        <span style="flex:1.2;">Member Pay (₹)</span>
                         <span style="flex:1.2;">Chit Payout (₹)</span>
-                        <span style="width:52px;text-align:center;">%</span>
+                        <span style="width:52px;text-align:center;">Payout%</span>
+                        <span style="width:80px;text-align:right;color:#34d399;">Owner Profit</span>
                     </div>
                     <div id="ncp_rows" style="display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;"></div>
                 </div>
 
                 <!-- Total row -->
-                <div id="ncp_total" style="display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(243,156,18,0.07);border-top:1px solid var(--border);font-size:0.82rem;font-weight:800;">
+                <div id="ncp_total" style="display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(16,185,129,0.08);border-top:1px solid var(--border);font-size:0.82rem;font-weight:800;">
                     <span style="width:26px;"></span>
                     <span style="flex:1.4;color:#f39c12;">TOTAL</span>
-                    <span id="ncp_totalPay" style="flex:1.2;color:#34d399;"></span>
+                    <span id="ncp_totalPay" style="flex:1.2;color:#a5b4fc;"></span>
                     <span id="ncp_totalPayout" style="flex:1.2;color:#f59e0b;"></span>
                     <span style="width:52px;"></span>
+                    <span id="ncp_totalProfit" style="width:80px;text-align:right;color:#34d399;font-size:0.88rem;"></span>
                 </div>
 
                 <!-- Print + Save buttons -->
@@ -959,9 +991,21 @@ async function loadMemberLedger(){
         const qtyBadge = qty>1
             ? `<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 8px;font-size:0.6rem;font-weight:800;margin-left:5px;">×${qty} chits</span>` : '';
 
-        const rows = allPays.map((p,idx)=>{
+        // Expand perMonthBreakdown payments into individual rows
+        const expandedPays = [];
+        allPays.forEach(p => {
+            const isMultiP = p.numMonths && p.numMonths > 1;
+            const hasPMB = isMultiP && p.perMonthBreakdown && p.perMonthBreakdown.length > 0;
+            if(hasPMB){
+                p.perMonthBreakdown.forEach((pmb, bi) => {
+                    expandedPays.push({ _isExpanded:true, _parentId:p.id, _groupSize:p.perMonthBreakdown.length, _groupIdx:bi, id:p.id+'_pmb_'+bi, memberId:p.memberId, groupId:p.groupId, enrollmentId:p.enrollmentId, slotNum:p.slotNum, date:p.date, chit:pmb.amt, paid:pmb.amt, balance:0, paidBy:p.paidBy, chitPicked:bi===0?p.chitPicked:'No', chitPickedBy:bi===0?(p.chitPickedBy||''):'', monthSlot:pmb.slot, monthSlots:[pmb.slot], numMonths:1 });
+                });
+            } else { expandedPays.push(p); }
+        });
+
+        const rows = expandedPays.map((p,idx)=>{
             const cp=p.chitPicked==='Yes';
-            const isMulti=p.numMonths&&p.numMonths>1;
+            const isMulti=!p._isExpanded && p.numMonths&&p.numMonths>1;
             const months=p.monthSlots||[];
             let monthLabel='—';
             if(isMulti && months.length>0){
@@ -976,18 +1020,22 @@ async function loadMemberLedger(){
             const slotCell = showSlotCol
                 ? `<td style="text-align:center;"><span style="background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:2px 7px;font-size:0.65rem;font-weight:800;">Chit ${slotNum}</span></td>`
                 : '';
-            const rowClass=cp?'chit-picked':(isMulti?'multi-month-row':'');
-            return `<tr class="${rowClass}">
+            let rowClass=cp?'chit-picked':(isMulti?'multi-month-row':'');
+            let extraStyle='';
+            if(p._isExpanded){ extraStyle=p._groupIdx===0?'background:rgba(99,102,241,0.13);border-top:2px solid rgba(99,102,241,0.55);':'background:rgba(99,102,241,0.06);'; rowClass=''; }
+            const expandedBadge=p._isExpanded?`<span style="font-size:0.52rem;background:rgba(99,102,241,0.22);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:800;">${p._groupIdx+1}/${p._groupSize}</span>`:'';
+            const editBtn=p._isExpanded?`<button class="btn-edit-sm" onclick="openEditPayment('${p._parentId}')" style="font-size:0.6rem;padding:3px 7px;opacity:0.65;" title="Edit parent payment">✏️</button>`:`<button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button>`;
+            return `<tr class="${rowClass}" style="${extraStyle}">
                 <td style="color:var(--text-dim);font-weight:700;">${idx+1}</td>
                 ${slotCell}
-                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
+                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${expandedBadge}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td style="color:#c4b5fd;">${fmtAmt(p.chit)}${isMulti?`<span style="font-size:0.55rem;color:var(--text-dim);display:block;">/mo × ${p.numMonths}</span>`:''}</td>
                 <td style="color:#34d399;font-weight:700;">${fmtAmt(p.paid)}</td>
                 <td style="color:#f59e0b;">${fmtAmt(p.balance)}</td>
                 <td style="color:var(--text-dim);font-size:0.6rem;">${p.paidBy||'—'}</td>
                 <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
-                <td><button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button></td>
+                <td>${editBtn}</td>
             </tr>`;
         }).join('');
 
@@ -1650,68 +1698,170 @@ function ncpGetDueDate(base, monthIndex, dueDay){
 
 function ncpUpdateTotalsAndPct(){
     const rows = document.querySelectorAll('#ncp_rows .ncp-row');
-    let totalPay = 0;
-    rows.forEach(row => { totalPay += parseFloat(row.querySelector('.ncp-pay').value)||0; });
-    const totalPayout = Array.from(rows).reduce((s,row)=>s+(parseFloat(row.querySelector('.ncp-chit').value)||0),0);
+    const members = parseInt(document.getElementById('ncp_members').value)||1;
+    let totalPay = 0, totalPayout = 0, totalProfit = 0;
+    rows.forEach(row => {
+        const mp = parseFloat(row.querySelector('.ncp-pay').value)||0;
+        const cp = parseFloat(row.querySelector('.ncp-chit').value)||0;
+        totalPay    += members * mp;
+        totalPayout += cp;
+        totalProfit += members * mp - cp;
+    });
     const tpEl = document.getElementById('ncp_totalPay');
     const tcEl = document.getElementById('ncp_totalPayout');
+    const tprEl = document.getElementById('ncp_totalProfit');
     if(tpEl) tpEl.textContent = '₹'+totalPay.toLocaleString('en-IN');
     if(tcEl) tcEl.textContent = '₹'+totalPayout.toLocaleString('en-IN');
+    if(tprEl){ tprEl.textContent = '₹'+totalProfit.toLocaleString('en-IN'); tprEl.style.color = totalProfit>=0?'#34d399':'#f87171'; }
+
     rows.forEach(row => {
+        const mp = parseFloat(row.querySelector('.ncp-pay').value)||0;
         const cp = parseFloat(row.querySelector('.ncp-chit').value)||0;
-        const pct = totalPay>0 ? ((cp/totalPay)*100).toFixed(1) : '—';
-        const pctNum = totalPay>0 ? (cp/totalPay)*100 : 0;
-        const el = row.querySelector('.ncp-pct');
-        if(el){
-            el.textContent = pct!=='—' ? pct+'%' : '—';
-            el.style.color = pctNum>=100?'#34d399':pctNum>=80?'#f59e0b':'#f87171';
+        const collected = members * mp;
+        const profit = collected - cp;
+        const pct = collected > 0 ? ((cp/collected)*100).toFixed(1) : '—';
+        const pctNum = collected > 0 ? (cp/collected)*100 : 0;
+        const pctEl = row.querySelector('.ncp-pct');
+        const profEl = row.querySelector('.ncp-profit');
+        if(pctEl){
+            pctEl.textContent = pct!=='—' ? pct+'%' : '—';
+            pctEl.style.color = pctNum>=100?'#f87171':pctNum>=80?'#f59e0b':'#34d399';
+        }
+        if(profEl){
+            profEl.textContent = cp > 0 ? '₹'+profit.toLocaleString('en-IN') : '—';
+            profEl.style.color = profit >= 0 ? '#34d399' : '#f87171';
         }
     });
-    // Auto-save whenever rows are edited
     if(document.getElementById('ncp_tableWrap').style.display !== 'none') ncpSave();
 }
 
 function ncpGenerate(savedRows){
-    const amount   = parseFloat(document.getElementById('ncp_amount').value)||0;
-    const members  = parseInt(document.getElementById('ncp_members').value)||0;
-    const duration = parseInt(document.getElementById('ncp_duration').value)||0;
-    const startVal = document.getElementById('ncp_start').value;
-    const dueDay   = parseInt(document.getElementById('ncp_dueday').value)||1;
-    // Only validate when user clicks Generate — not during restore
+    const amount      = parseFloat(document.getElementById('ncp_amount').value)||0;
+    const members     = parseInt(document.getElementById('ncp_members').value)||0;
+    const duration    = parseInt(document.getElementById('ncp_duration').value)||0;
+    const startVal    = document.getElementById('ncp_start').value;
+    const dueDay      = parseInt(document.getElementById('ncp_dueday').value)||1;
+    const commPct     = parseFloat(document.getElementById('ncp_commission')?.value??5)||0;
+    const escalPct    = parseFloat(document.getElementById('ncp_escalation')?.value??0)||0;
+    const payoutMode  = document.getElementById('ncp_payoutmode')?.value || 'diminishing';
+    const minPayoutPct= parseFloat(document.getElementById('ncp_minpayout')?.value??70)||70;
+
     if(!savedRows){
         if(!duration){ showToast('❌ Enter Duration (months)', false); return; }
         if(!members)  { showToast('❌ Enter No. of Members', false); return; }
         if(!amount)   { showToast('❌ Enter Chit Amount (₹)', false); return; }
     }
-    if(!duration || !members) return; // silent guard during restore
-    const monthlyPay = Math.round(amount / members);
+    if(!duration || !members) return;
+
     const base = startVal ? new Date(startVal) : null;
+
+    // ── 1. Compute monthly pay with optional escalation ──
+    // If escalation = 0: flat = amount/members
+    // If escalation > 0: geometric series so that sum = amount*duration
+    // Each month: pay[i] = basePay * (1 + escalPct/100)^i
+    // Sum of geometric series: basePay * ((1+r)^n - 1) / r  = amount (total collected)
+    // => basePay = amount / ( ((1+r)^n - 1) / r )   [if r>0]
+    let monthlyPays = [];
+    const r = escalPct / 100;
+    if(r > 0){
+        // basePay such that sum over duration months = amount * (duration/members) ... 
+        // Actually: each month all members pay monthly_pay[i], owner collects members * monthly_pay[i]
+        // We want total collected by owner over all months = amount * duration (full chit value × months)
+        // basePay * sum((1+r)^i, i=0..n-1) = amount   => basePay = amount * r / ((1+r)^n - 1)
+        const sumFactor = ((Math.pow(1+r, duration) - 1) / r);
+        const basePay = amount / sumFactor;
+        for(let i=0;i<duration;i++) monthlyPays.push(Math.round(basePay * Math.pow(1+r, i)));
+    } else {
+        const flat = Math.round(amount / members);
+        for(let i=0;i<duration;i++) monthlyPays.push(flat);
+    }
+
+    // ── 2. Commission: owner keeps commPct% of chit amount each month ──
+    // Chit payout to winner = monthly_collections - commission
+    // monthly_collections = members * monthlyPay[i]
+    // commission[i] = amount * commPct/100  (fixed % of full chit value)
+    // payout[i] = members * monthlyPay[i] - commission[i]
+    // But we also want to shape payout by payoutMode
+
+    // ── 3. Payout shaping ──
+    // "Diminishing": early months winner gets LESS (they bid more, owner profits from difference)
+    //   Month 1: minPayoutPct% of chit amount
+    //   Month N: up to ~97% of chit amount (last person deserves full value)
+    // "Ascending": flipped — early months get more (incentive to bid early)
+    // "Flat": everyone gets same = amount - commission (commission model only)
+    // "Custom": leave blank for manual fill
+
+    let payouts = [];
+    const minPayout = Math.round(amount * minPayoutPct / 100);
+    const maxPayout = Math.round(amount * 0.97); // last winner gets ~97%
+
+    if(payoutMode === 'custom'){
+        payouts = new Array(duration).fill(0);
+    } else if(payoutMode === 'flat'){
+        // Flat: commission deducted, rest paid out equally
+        const commAmt = Math.round(amount * commPct / 100);
+        for(let i=0;i<duration;i++) payouts.push(Math.round(members * monthlyPays[i] - commAmt));
+    } else if(payoutMode === 'diminishing'){
+        // Diminishing bids: Month 1 gets minPayout, Month N gets maxPayout
+        // Linear interpolation from minPayout → maxPayout
+        for(let i=0;i<duration;i++){
+            const t = duration === 1 ? 1 : i / (duration - 1);
+            payouts.push(Math.round(minPayout + t * (maxPayout - minPayout)));
+        }
+    } else if(payoutMode === 'ascending'){
+        // Ascending: Month 1 gets maxPayout, Month N gets minPayout
+        for(let i=0;i<duration;i++){
+            const t = duration === 1 ? 0 : i / (duration - 1);
+            payouts.push(Math.round(maxPayout - t * (maxPayout - minPayout)));
+        }
+    }
+
+    // ── 4. Compute owner profit per month ──
+    // Owner profit[i] = members * pay[i] - payout[i]
+    // Show total profit summary
+    const ownerProfits = monthlyPays.map((mp, i) => members * mp - (payouts[i]||0));
+    const totalOwnerProfit = ownerProfits.reduce((s,v)=>s+v, 0);
+    const totalCollected = monthlyPays.reduce((s,v)=>s + members*v, 0);
+    const totalPayout = payouts.reduce((s,v)=>s+v, 0);
+    const profitPct = totalCollected > 0 ? ((totalOwnerProfit/totalCollected)*100).toFixed(1) : 0;
+
+    // ── 5. Build chips header ──
     const chips = [
         ['Duration', duration+' mo'],
         ['Members', members||'—'],
-        ['Start', base?base.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—'],
-        ['Due Day', dueDay],
+        ['Commission', commPct+'%'],
+        ['Escalation', escalPct > 0 ? '+'+escalPct+'%/mo' : 'Flat'],
+        ['Owner Profit', '₹'+totalOwnerProfit.toLocaleString('en-IN')],
+        ['Profit %', profitPct+'%'],
     ];
     document.getElementById('ncp_chips').innerHTML = chips.map((c,i)=>`
         <div style="flex:1;padding:8px 4px;text-align:center;${i<chips.length-1?'border-right:1px solid var(--border);':''}">
-            <div style="font-size:0.72rem;font-weight:800;color:#a5b4fc;">${c[1]}</div>
+            <div style="font-size:0.72rem;font-weight:800;color:${i>=4?'#34d399':'#a5b4fc'};">${c[1]}</div>
             <div style="font-size:0.52rem;color:var(--text-dim);text-transform:uppercase;margin-top:1px;">${c[0]}</div>
         </div>`).join('');
+
+    // ── 6. Render rows ──
     const rowsEl = document.getElementById('ncp_rows');
     rowsEl.innerHTML = '';
     for(let i=0;i<duration;i++){
         const dueStr = ncpGetDueDate(base, i, dueDay);
+        const mp = monthlyPays[i];
+        const cp = payouts[i] || 0;
+        const profit = members * mp - cp;
+        const profitColor = profit > 0 ? '#34d399' : '#f87171';
         const div = document.createElement('div');
         div.className = 'ncp-row';
         div.style.cssText = 'display:flex;gap:4px;align-items:center;';
         div.innerHTML = `
             <span style="width:26px;font-size:0.75rem;color:var(--text-dim);font-weight:700;text-align:center;flex-shrink:0;">${i+1}</span>
             <span class="ncp-due" style="flex:1.4;font-size:0.78rem;color:#a5b4fc;white-space:nowrap;">${dueStr}</span>
-            <input type="number" class="ncp-pay form-input" value="${monthlyPay||''}" placeholder="Monthly Pay" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
-            <input type="number" class="ncp-chit form-input" value="" placeholder="Chit Payout" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
-            <span class="ncp-pct" style="width:52px;text-align:center;font-size:0.78rem;font-weight:800;color:var(--text-dim);">—</span>`;
+            <input type="number" class="ncp-pay form-input" value="${mp||''}" placeholder="Member Pay" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
+            <input type="number" class="ncp-chit form-input" value="${cp||''}" placeholder="Chit Payout" style="flex:1.2;margin-bottom:0;padding:7px 8px;font-size:0.82rem;" oninput="ncpUpdateTotalsAndPct();ncpSave();">
+            <span class="ncp-pct" style="width:52px;text-align:center;font-size:0.78rem;font-weight:800;color:var(--text-dim);">—</span>
+            <span class="ncp-profit" style="width:80px;text-align:right;font-size:0.75rem;font-weight:800;color:#34d399;">—</span>`;
         rowsEl.appendChild(div);
     }
+
     // Restore saved pay/chit values if available
     if(savedRows && savedRows.length){
         const allRows = document.querySelectorAll('#ncp_rows .ncp-row');
@@ -1722,59 +1872,77 @@ function ncpGenerate(savedRows){
             }
         });
     }
+
     document.getElementById('ncp_tableWrap').style.display = 'block';
     ncpUpdateTotalsAndPct();
-    if(!savedRows) showToast('✅ Schedule generated — fill in Chit Payout per month', true);
+
+    if(!savedRows){
+        const modeLabel = {diminishing:'Diminishing bid',flat:'Flat commission',ascending:'Ascending bid',custom:'Custom'}[payoutMode]||payoutMode;
+        showToast(`✅ Schedule ready — ${modeLabel} mode · Owner profit ₹${totalOwnerProfit.toLocaleString('en-IN')} (${profitPct}%)`, true);
+    }
     ncpSave();
 }
 
 function ncpPrint(){
-    const name       = document.getElementById('ncp_name').value.trim() || 'New Chit Group';
-    const memberName = document.getElementById('ncp_member').value.trim();
-    const members    = parseInt(document.getElementById('ncp_members').value)||0;
-    const duration   = parseInt(document.getElementById('ncp_duration').value)||0;
-    const startVal   = document.getElementById('ncp_start').value;
-    const dueDay     = parseInt(document.getElementById('ncp_dueday').value)||1;
-    const base       = startVal ? new Date(startVal) : null;
-    const startDisp  = base ? base.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : '—';
-    const today      = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
-    const monthlyPayBase = 0;
-    const rows = document.querySelectorAll('#ncp_rows .ncp-row');
-    let totalPay=0;
+    const name        = document.getElementById('ncp_name').value.trim() || 'New Chit Group';
+    const memberName  = document.getElementById('ncp_member').value.trim();
+    const members     = parseInt(document.getElementById('ncp_members').value)||0;
+    const duration    = parseInt(document.getElementById('ncp_duration').value)||0;
+    const startVal    = document.getElementById('ncp_start').value;
+    const dueDay      = parseInt(document.getElementById('ncp_dueday').value)||1;
+    const commPct     = parseFloat(document.getElementById('ncp_commission')?.value??5)||0;
+    const escalPct    = parseFloat(document.getElementById('ncp_escalation')?.value??0)||0;
+    const payoutMode  = document.getElementById('ncp_payoutmode')?.value || 'diminishing';
+    const base        = startVal ? new Date(startVal) : null;
+    const startDisp   = base ? base.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+    const today       = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+    const rows        = document.querySelectorAll('#ncp_rows .ncp-row');
+    let totalCollected=0, totalPayout=0, totalProfit=0;
     const rowData=[];
     rows.forEach((row,i)=>{
-        const mp = parseFloat(row.querySelector('.ncp-pay').value)||0;
-        const cp = parseFloat(row.querySelector('.ncp-chit').value)||0;
+        const mp  = parseFloat(row.querySelector('.ncp-pay').value)||0;
+        const cp  = parseFloat(row.querySelector('.ncp-chit').value)||0;
         const due = row.querySelector('.ncp-due').textContent;
-        totalPay += mp;
-        rowData.push({i,mp,cp,due});
+        const collected = members * mp;
+        const profit = collected - cp;
+        totalCollected += collected;
+        totalPayout    += cp;
+        totalProfit    += profit;
+        rowData.push({i, mp, cp, due, collected, profit});
     });
-    const tableRows = rowData.map(({i,mp,cp,due})=>{
-        const pct = totalPay>0 ? ((cp/totalPay)*100).toFixed(1) : '—';
-        const pctNum = totalPay>0 ? (cp/totalPay)*100 : 0;
-        const pctColor = pctNum>=100?'#065f46':pctNum>=80?'#92400e':'#991b1b';
+    const profitPct = totalCollected > 0 ? ((totalProfit/totalCollected)*100).toFixed(1) : 0;
+    const modeLabels = {diminishing:'Diminishing Bid (High→Low payout)',flat:'Flat Commission',ascending:'Ascending Bid (Low→High payout)',custom:'Custom'};
+
+    const tableRows = rowData.map(({i,mp,cp,due,collected,profit})=>{
+        const payoutPct = collected > 0 ? ((cp/collected)*100).toFixed(1) : '—';
+        const payoutPctNum = collected > 0 ? (cp/collected)*100 : 0;
+        const pctColor = payoutPctNum<=80?'#065f46':payoutPctNum<=95?'#92400e':'#991b1b';
+        const profitColor = profit>=0 ? '#065f46' : '#991b1b';
         return `<tr style="background:${i%2===0?'#f9fafb':'#fff'};">
             <td style="text-align:center;color:#888;font-weight:800;font-size:13px;">${i+1}</td>
             <td style="font-weight:600;">${due}</td>
-            <td style="color:#065f46;font-weight:700;">&#8377;${mp.toLocaleString('en-IN')}</td>
+            <td style="color:#1e40af;font-weight:700;">&#8377;${mp.toLocaleString('en-IN')}<br><span style="font-size:10px;color:#888;font-weight:400;">×${members} = &#8377;${collected.toLocaleString('en-IN')}</span></td>
             <td style="color:#92400e;font-weight:700;">${cp?'&#8377;'+cp.toLocaleString('en-IN'):'—'}</td>
-            <td style="text-align:center;font-weight:800;color:${pctColor};">${pct!=='—'?pct+'%':'—'}</td>
+            <td style="text-align:center;font-weight:800;color:${pctColor};">${payoutPct!=='—'?payoutPct+'%':'—'}</td>
+            <td style="font-weight:800;color:${profitColor};">&#8377;${profit.toLocaleString('en-IN')}</td>
         </tr>`;
     }).join('');
+
     const printHTML=`<div id="gsContent">
     <style>
-        #gsContent{font-family:Arial,sans-serif;color:#111;max-width:820px;margin:0 auto;padding:16px;}
+        #gsContent{font-family:Arial,sans-serif;color:#111;max-width:860px;margin:0 auto;padding:16px;}
         #gsContent .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #f39c12;padding-bottom:10px;margin-bottom:14px;}
         #gsContent .brand{font-size:22px;font-weight:900;color:#f39c12;}
         #gsContent .info-box{background:#fffbf0;border:2px solid #f39c12;border-radius:8px;padding:14px 18px;margin-bottom:14px;}
+        #gsContent .profit-box{background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
         #gsContent .chip{background:#fff;padding:8px 10px;font-size:11px;text-align:center;}
         #gsContent .chip-v{font-size:15px;font-weight:800;margin-bottom:2px;}
         #gsContent .chip-l{font-size:9px;color:#888;text-transform:uppercase;}
-        #gsContent table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:10px;table-layout:auto;}
+        #gsContent table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;table-layout:auto;}
         #gsContent thead tr{background:#fef3c7;}
-        #gsContent th{border:1px solid #d1a832;padding:10px 12px;font-size:14px;text-transform:uppercase;color:#555;font-weight:800;}
-        #gsContent td{border:1px solid #e5e7eb;padding:10px 12px;font-size:15px;}
-        #gsContent tfoot td{background:#fff8e1;font-weight:800;border-top:2px solid #f39c12;font-size:15px;}
+        #gsContent th{border:1px solid #d1a832;padding:9px 10px;font-size:12px;text-transform:uppercase;color:#555;font-weight:800;}
+        #gsContent td{border:1px solid #e5e7eb;padding:9px 10px;font-size:13px;}
+        #gsContent tfoot td{background:#f0fdf4;font-weight:800;border-top:2px solid #16a34a;font-size:13px;}
         #gsContent .notice{background:#fffbe6;border:1px solid #f5d060;border-radius:6px;padding:10px 14px;font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;}
         #gsContent .ftr{margin-top:14px;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#aaa;}
         #gsContent .pbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
@@ -1789,8 +1957,6 @@ function ncpPrint(){
             #gsContent thead{display:table-header-group;}
             #gsContent tfoot{display:table-footer-group;}
             #gsContent tr{page-break-inside:avoid;page-break-after:auto;}
-            #gsContent .notice{page-break-inside:avoid;}
-            #gsContent .info-box{page-break-inside:avoid;}
             @page{size:A4 portrait;margin:10mm;}
         }
     </style>
@@ -1802,36 +1968,60 @@ function ncpPrint(){
         <div>
             <div class="brand">&#127942; AK CHIT FUNDS</div>
             <div style="font-size:9px;color:#888;">Chit Fund Management &bull; Official Group Schedule</div>
-            ${memberName?`<div style="margin-top:6px;"><span style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Prepared For:</span><br><span style="font-size:13px;font-weight:900;color:#111;">&#128100; ${memberName}</span></div>`:''}
+            ${memberName?`<div style="margin-top:6px;"><span style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;">Prepared For:</span><br><span style="font-size:13px;font-weight:900;color:#111;">&#128100; ${memberName}</span></div>`:''}
         </div>
         <div style="text-align:right;"><div style="font-size:13px;font-weight:800;">CHIT SCHEDULE REPORT</div><div style="font-size:9px;color:#888;">Generated: ${today}</div></div>
     </div>
     <div class="info-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-size:16px;font-weight:900;">&#128194; ${name}</div>
-
-        </div>
+        <div style="font-size:16px;font-weight:900;margin-bottom:10px;">&#128194; ${name}</div>
         <div style="display:flex;gap:0;border:1px solid #e5c76b;border-radius:8px;overflow:hidden;">
-            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${duration}</div><div class="chip-l">Duration (Months)</div></div>
-            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${dueDay}</div><div class="chip-l">Due Day / Month</div></div>
+            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${duration}</div><div class="chip-l">Duration (mo)</div></div>
+            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${members||'?'}</div><div class="chip-l">Members</div></div>
+            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${dueDay}</div><div class="chip-l">Due Day</div></div>
             <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${startDisp}</div><div class="chip-l">Start Date</div></div>
-            <div class="chip" style="flex:1;"><div class="chip-v" style="color:#065f46;">&#8377;${totalPay.toLocaleString('en-IN')}</div><div class="chip-l">Total Monthly Pay</div></div>
+            <div class="chip" style="flex:1;border-right:1px solid #e5c76b;"><div class="chip-v">${commPct}%</div><div class="chip-l">Commission</div></div>
+            <div class="chip" style="flex:1;"><div class="chip-v">${escalPct>0?'+'+escalPct+'%':'Flat'}</div><div class="chip-l">Escalation</div></div>
         </div>
     </div>
-    <div class="notice">&#128161; <b>How this Chit Works:</b> This group runs for <b>${duration} months</b> with <b>${members||'?'} members</b>. Monthly pay increases gradually. Every member wins once over the full cycle.</div>
+    <div class="profit-box">
+        <div style="flex:1;">
+            <div style="font-size:10px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">&#128200; Owner Profit Summary</div>
+            <div style="font-size:9px;color:#555;">Mode: <b>${modeLabels[payoutMode]||payoutMode}</b></div>
+        </div>
+        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #86efac;">
+            <div style="font-size:18px;font-weight:900;color:#15803d;">&#8377;${totalProfit.toLocaleString('en-IN')}</div>
+            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Profit</div>
+        </div>
+        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #86efac;">
+            <div style="font-size:18px;font-weight:900;color:#15803d;">${profitPct}%</div>
+            <div style="font-size:9px;color:#888;text-transform:uppercase;">Profit %</div>
+        </div>
+        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #d1fae5;">
+            <div style="font-size:15px;font-weight:800;color:#1e40af;">&#8377;${totalCollected.toLocaleString('en-IN')}</div>
+            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Collected</div>
+        </div>
+        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #fde68a;">
+            <div style="font-size:15px;font-weight:800;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</div>
+            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Paid Out</div>
+        </div>
+    </div>
+    <div class="notice">&#128161; <b>How this Chit Works:</b> ${members||'?'} members pay monthly. Winner each month receives the chit payout (less than full collection). The difference is <b>owner profit</b>. Mode: <b>${modeLabels[payoutMode]||payoutMode}</b>. Commission: <b>${commPct}%</b>. Escalation: <b>${escalPct>0?'+'+escalPct+'% per month':'Flat rate'}</b>.</div>
     <table>
         <thead><tr>
-            <th style="width:8%;text-align:center;">Month #</th>
-            <th style="width:25%;">Due Date</th>
-            <th style="width:30%;">Monthly Pay<br><span style="font-weight:400;font-size:11px;">(Amount each member pays)</span></th>
-            <th style="width:25%;">Chit Payout<br><span style="font-weight:400;font-size:11px;">(Prize the winner receives)</span></th>
-            <th style="width:12%;text-align:center;">% Return</th>
+            <th style="width:6%;text-align:center;">Mo#</th>
+            <th style="width:18%;">Due Date</th>
+            <th style="width:28%;">Member Pay (Each → Total)</th>
+            <th style="width:20%;">Chit Payout<br><span style="font-weight:400;font-size:10px;">(Winner receives)</span></th>
+            <th style="width:10%;text-align:center;">Payout %</th>
+            <th style="width:18%;color:#15803d;">Owner Profit</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
-            <td colspan="2" style="text-align:right;padding-right:10px;font-size:14px;font-weight:800;">GRAND TOTAL</td>
-            <td style="font-size:13px;font-weight:900;color:#065f46;">&#8377;${totalPay.toLocaleString('en-IN')}</td>
-            <td></td><td></td>
+            <td colspan="2" style="text-align:right;padding-right:10px;font-weight:800;">GRAND TOTAL</td>
+            <td style="font-weight:900;color:#1e40af;">&#8377;${totalCollected.toLocaleString('en-IN')}</td>
+            <td style="font-weight:900;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</td>
+            <td></td>
+            <td style="font-weight:900;color:#15803d;">&#8377;${totalProfit.toLocaleString('en-IN')} (${profitPct}%)</td>
         </tr></tfoot>
     </table>
     <div class="ftr"><span>AK Chit Funds &bull; Admin Portal</span><span>${name} &bull; ${today}</span><span>CONFIDENTIAL</span></div>
@@ -1966,9 +2156,16 @@ async function printMemberStatement(mid){
 
     // Helper: build print rows for a set of payments
     function buildPrintRows(pays, allDueDates){
-        return pays.map((p,idx)=>{
+        const expandedPays = [];
+        pays.forEach(p => {
+            const isMultiP=p.numMonths&&p.numMonths>1;
+            const hasPMB=isMultiP&&p.perMonthBreakdown&&p.perMonthBreakdown.length>0;
+            if(hasPMB){ p.perMonthBreakdown.forEach((pmb,bi)=>{ expandedPays.push({_isExpanded:true,_groupIdx:bi,_groupSize:p.perMonthBreakdown.length,date:p.date,chit:pmb.amt,paid:pmb.amt,balance:0,paidBy:p.paidBy,chitPicked:bi===0?p.chitPicked:'No',chitPickedBy:bi===0?(p.chitPickedBy||''):'',monthSlot:pmb.slot,monthSlots:[pmb.slot],numMonths:1}); }); }
+            else { expandedPays.push(p); }
+        });
+        return expandedPays.map((p,idx)=>{
             const cp=p.chitPicked==='Yes';
-            const isMulti=p.numMonths&&p.numMonths>1;
+            const isMulti=!p._isExpanded&&p.numMonths&&p.numMonths>1;
             let monthLabel='—';
             if(isMulti&&p.monthSlots&&p.monthSlots.length>0){
                 const f=allDueDates[p.monthSlots[0]]?fmtDate(allDueDates[p.monthSlots[0]]):'—';
@@ -1979,11 +2176,12 @@ async function printMemberStatement(mid){
                 monthLabel=si>=0&&allDueDates[si]?fmtDate(allDueDates[si]):'—';
             }
             const chitDisp=isMulti?`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}/mo x${p.numMonths}`:`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}`;
-            const bg=cp?'#f0fff8':(isMulti?'#eef2ff':'#fff');
-            const bl=cp?'border-left:3px solid #10b981;':(isMulti?'border-left:3px solid #818cf8;':'');
+            const expandedTag=p._isExpanded?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;">${p._groupIdx+1}/${p._groupSize}</span>`:'';
+            const bg=cp?'#f0fff8':p._isExpanded?(p._groupIdx%2===0?'#eef2ff':'#f5f3ff'):(isMulti?'#eef2ff':'#fff');
+            const bl=cp?'border-left:3px solid #10b981;':p._isExpanded&&p._groupIdx===0?'border-left:3px solid #818cf8;border-top:2px solid #c7d2fe;':p._isExpanded?'border-left:3px solid #c7d2fe;':(isMulti?'border-left:3px solid #818cf8;':'');
             return `<tr style="background:${bg};${bl}">
                 <td style="text-align:center;">${idx+1}</td>
-                <td>${monthLabel}${isMulti?` <small style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</small>`:''}</td>
+                <td>${monthLabel}${expandedTag}${isMulti?` <small style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</small>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td>${chitDisp}</td>
                 <td style="color:#065f46;font-weight:700;">Rs.${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
@@ -2211,22 +2409,32 @@ async function generateGroupPDF(gid){
         const mPaid = mp.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
         const mBal  = mp.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
         const slotBadge = totalSlots>1 ? ` <span style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:800;">Chit ${slotNum}/${totalSlots}</span>` : '';
-        const rows = mp.map((p,idx) => {
-            const isMulti = p.numMonths && p.numMonths > 1;
-            let monthLabel = '—';
-            if(isMulti && p.monthSlots && p.monthSlots.length>0){
-                const f = allDueDates[p.monthSlots[0]] ? fmtDate(allDueDates[p.monthSlots[0]]) : '—';
-                const l = allDueDates[p.monthSlots[p.monthSlots.length-1]] ? fmtDate(allDueDates[p.monthSlots[p.monthSlots.length-1]]) : '—';
-                monthLabel = `${f} → ${l}`;
+        // Expand perMonthBreakdown into individual rows for group PDF
+        const expandedMp = [];
+        mp.forEach(p => {
+            const isMultiP=p.numMonths&&p.numMonths>1;
+            const hasPMB=isMultiP&&p.perMonthBreakdown&&p.perMonthBreakdown.length>0;
+            if(hasPMB){ p.perMonthBreakdown.forEach((pmb,bi)=>{ expandedMp.push({_isExpanded:true,_groupIdx:bi,_groupSize:p.perMonthBreakdown.length,id:p.id,date:p.date,chit:pmb.amt,paid:pmb.amt,balance:0,paidBy:p.paidBy,chitPicked:bi===0?p.chitPicked:'No',monthSlot:pmb.slot,monthSlots:[pmb.slot],numMonths:1}); }); }
+            else { expandedMp.push(p); }
+        });
+        const rows = expandedMp.map((p,idx) => {
+            const isMulti=!p._isExpanded&&p.numMonths&&p.numMonths>1;
+            let monthLabel='—';
+            if(isMulti&&p.monthSlots&&p.monthSlots.length>0){
+                const f=allDueDates[p.monthSlots[0]]?fmtDate(allDueDates[p.monthSlots[0]]):'—';
+                const l=allDueDates[p.monthSlots[p.monthSlots.length-1]]?fmtDate(allDueDates[p.monthSlots[p.monthSlots.length-1]]):'—';
+                monthLabel=`${f} → ${l}`;
             } else {
-                const si = p.monthSlot !== undefined ? p.monthSlot : getMonthSlot(allDueDates, p.date);
-                monthLabel = si>=0 && allDueDates[si] ? fmtDate(allDueDates[si]) : '—';
+                const si=p.monthSlot!==undefined?p.monthSlot:getMonthSlot(allDueDates,p.date);
+                monthLabel=si>=0&&allDueDates[si]?fmtDate(allDueDates[si]):'—';
             }
-            const cp = p.chitPicked === 'Yes';
-            const bg = cp ? '#f0fff8' : (isMulti ? '#eef2ff' : (idx%2===0?'#f9fafb':'#fff'));
-            return `<tr style="background:${bg};">
+            const cp=p.chitPicked==='Yes';
+            const expandedTag=p._isExpanded?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;">${p._groupIdx+1}/${p._groupSize}</span>`:'';
+            const bg=cp?'#f0fff8':p._isExpanded?(p._groupIdx%2===0?'#eef2ff':'#f5f3ff'):(isMulti?'#eef2ff':(idx%2===0?'#f9fafb':'#fff'));
+            const bl=p._isExpanded&&p._groupIdx===0?'border-left:3px solid #818cf8;border-top:2px solid #c7d2fe;':p._isExpanded?'border-left:3px solid #c7d2fe;':cp?'border-left:3px solid #10b981;':'';
+            return `<tr style="background:${bg};${bl}">
                 <td style="text-align:center;color:#888;">${idx+1}</td>
-                <td>${monthLabel}${isMulti?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</span>`:''}</td>
+                <td>${monthLabel}${expandedTag}${isMulti?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</span>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td>₹${(parseFloat(p.chit)||0).toLocaleString('en-IN')}${isMulti?`/mo×${p.numMonths}`:''}</td>
                 <td style="color:#065f46;font-weight:700;">₹${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
@@ -2639,7 +2847,7 @@ async function pollPendingRequests(){
 // ══════════════════════════════════════════
 // CHIT PLANNER — FIRESTORE-BACKED MULTI-DEVICE
 // ══════════════════════════════════════════
-const NCP_FIELDS = ['ncp_name','ncp_member','ncp_amount','ncp_members','ncp_duration','ncp_start','ncp_dueday'];
+const NCP_FIELDS = ['ncp_name','ncp_member','ncp_amount','ncp_members','ncp_duration','ncp_start','ncp_dueday','ncp_commission','ncp_escalation','ncp_payoutmode','ncp_minpayout'];
 const NCP_ACTIVE_LS = 'akdf_ncp_active_key'; // only active key stored locally
 let ncpActivePlannerKey = null;
 let _ncpCache = null; // in-memory cache to avoid redundant Firestore reads
