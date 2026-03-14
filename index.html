@@ -959,9 +959,43 @@ async function loadMemberLedger(){
         const qtyBadge = qty>1
             ? `<span style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:1px 8px;font-size:0.6rem;font-weight:800;margin-left:5px;">×${qty} chits</span>` : '';
 
-        const rows = allPays.map((p,idx)=>{
+        // ── Expand perMonthBreakdown payments into individual rows ──
+        const expandedPays = [];
+        allPays.forEach(p => {
+            const isMultiP = p.numMonths && p.numMonths > 1;
+            const hasPMB = isMultiP && p.perMonthBreakdown && p.perMonthBreakdown.length > 0;
+            if(hasPMB){
+                p.perMonthBreakdown.forEach((pmb, bi) => {
+                    expandedPays.push({
+                        _isExpanded: true,
+                        _parentId: p.id,
+                        _groupSize: p.perMonthBreakdown.length,
+                        _groupIdx: bi,
+                        id: p.id + '_pmb_' + bi,
+                        memberId: p.memberId,
+                        groupId: p.groupId,
+                        enrollmentId: p.enrollmentId,
+                        slotNum: p.slotNum,
+                        date: p.date,
+                        chit: pmb.amt,
+                        paid: pmb.amt,
+                        balance: 0,
+                        paidBy: p.paidBy,
+                        chitPicked: bi === 0 ? p.chitPicked : 'No',
+                        chitPickedBy: bi === 0 ? (p.chitPickedBy||'') : '',
+                        monthSlot: pmb.slot,
+                        monthSlots: [pmb.slot],
+                        numMonths: 1,
+                    });
+                });
+            } else {
+                expandedPays.push(p);
+            }
+        });
+
+        const rows = expandedPays.map((p,idx)=>{
             const cp=p.chitPicked==='Yes';
-            const isMulti=p.numMonths&&p.numMonths>1;
+            const isMulti=!p._isExpanded && p.numMonths&&p.numMonths>1;
             const months=p.monthSlots||[];
             let monthLabel='—';
             if(isMulti && months.length>0){
@@ -976,18 +1010,32 @@ async function loadMemberLedger(){
             const slotCell = showSlotCol
                 ? `<td style="text-align:center;"><span style="background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;border-radius:5px;padding:2px 7px;font-size:0.65rem;font-weight:800;">Chit ${slotNum}</span></td>`
                 : '';
-            const rowClass=cp?'chit-picked':(isMulti?'multi-month-row':'');
-            return `<tr class="${rowClass}">
+            // Expanded rows: indigo tint, first row of group gets top accent border
+            let rowClass = cp ? 'chit-picked' : (isMulti ? 'multi-month-row' : '');
+            let extraStyle = '';
+            if(p._isExpanded){
+                extraStyle = p._groupIdx === 0
+                    ? 'background:rgba(99,102,241,0.13);border-top:2px solid rgba(99,102,241,0.55);'
+                    : 'background:rgba(99,102,241,0.06);';
+                rowClass = '';
+            }
+            const expandedBadge = p._isExpanded
+                ? `<span style="font-size:0.52rem;background:rgba(99,102,241,0.22);color:#a5b4fc;border:1px solid rgba(99,102,241,0.4);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:800;">${p._groupIdx+1}/${p._groupSize}</span>`
+                : '';
+            const editBtn = p._isExpanded
+                ? `<button class="btn-edit-sm" onclick="openEditPayment('${p._parentId}')" style="font-size:0.6rem;padding:3px 7px;opacity:0.65;" title="Edit parent payment">✏️</button>`
+                : `<button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button>`;
+            return `<tr class="${rowClass}" style="${extraStyle}">
                 <td style="color:var(--text-dim);font-weight:700;">${idx+1}</td>
                 ${slotCell}
-                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
+                <td style="color:#a5b4fc;font-weight:700;white-space:normal;min-width:90px;font-size:0.62rem;">${monthLabel}${expandedBadge}${isMulti?`<br><span class="multi-month-badge">📅 ${p.numMonths} months</span>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td style="color:#c4b5fd;">${fmtAmt(p.chit)}${isMulti?`<span style="font-size:0.55rem;color:var(--text-dim);display:block;">/mo × ${p.numMonths}</span>`:''}</td>
                 <td style="color:#34d399;font-weight:700;">${fmtAmt(p.paid)}</td>
                 <td style="color:#f59e0b;">${fmtAmt(p.balance)}</td>
                 <td style="color:var(--text-dim);font-size:0.6rem;">${p.paidBy||'—'}</td>
                 <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
-                <td><button class="btn-edit-sm" onclick="openEditPayment('${p.id}')" style="font-size:0.6rem;padding:3px 7px;">✏️</button></td>
+                <td>${editBtn}</td>
             </tr>`;
         }).join('');
 
@@ -1966,9 +2014,37 @@ async function printMemberStatement(mid){
 
     // Helper: build print rows for a set of payments
     function buildPrintRows(pays, allDueDates){
-        return pays.map((p,idx)=>{
+        // Expand perMonthBreakdown payments into individual rows for print
+        const expandedPays = [];
+        pays.forEach(p => {
+            const isMultiP = p.numMonths && p.numMonths > 1;
+            const hasPMB = isMultiP && p.perMonthBreakdown && p.perMonthBreakdown.length > 0;
+            if(hasPMB){
+                p.perMonthBreakdown.forEach((pmb, bi) => {
+                    expandedPays.push({
+                        _isExpanded: true,
+                        _groupIdx: bi,
+                        _groupSize: p.perMonthBreakdown.length,
+                        _parentId: p.id,
+                        date: p.date,
+                        chit: pmb.amt,
+                        paid: pmb.amt,
+                        balance: 0,
+                        paidBy: p.paidBy,
+                        chitPicked: bi === 0 ? p.chitPicked : 'No',
+                        chitPickedBy: bi === 0 ? (p.chitPickedBy||'') : '',
+                        monthSlot: pmb.slot,
+                        monthSlots: [pmb.slot],
+                        numMonths: 1,
+                    });
+                });
+            } else {
+                expandedPays.push(p);
+            }
+        });
+        return expandedPays.map((p,idx)=>{
             const cp=p.chitPicked==='Yes';
-            const isMulti=p.numMonths&&p.numMonths>1;
+            const isMulti=!p._isExpanded && p.numMonths&&p.numMonths>1;
             let monthLabel='—';
             if(isMulti&&p.monthSlots&&p.monthSlots.length>0){
                 const f=allDueDates[p.monthSlots[0]]?fmtDate(allDueDates[p.monthSlots[0]]):'—';
@@ -1978,12 +2054,22 @@ async function printMemberStatement(mid){
                 const si=p.monthSlot!==undefined?p.monthSlot:getMonthSlot(allDueDates,p.date);
                 monthLabel=si>=0&&allDueDates[si]?fmtDate(allDueDates[si]):'—';
             }
-            const chitDisp=isMulti?`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}/mo x${p.numMonths}`:`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}`;
-            const bg=cp?'#f0fff8':(isMulti?'#eef2ff':'#fff');
-            const bl=cp?'border-left:3px solid #10b981;':(isMulti?'border-left:3px solid #818cf8;':'');
+            const chitDisp=isMulti
+                ?`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}/mo x${p.numMonths}`
+                :`Rs.${(parseFloat(p.chit)||0).toLocaleString('en-IN')}`;
+            const expandedTag = p._isExpanded
+                ? ` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;">${p._groupIdx+1}/${p._groupSize}</span>`
+                : '';
+            const bg = cp ? '#f0fff8'
+                : p._isExpanded ? (p._groupIdx % 2 === 0 ? '#eef2ff' : '#f5f3ff')
+                : (isMulti ? '#eef2ff' : '#fff');
+            const bl = cp ? 'border-left:3px solid #10b981;'
+                : p._isExpanded && p._groupIdx === 0 ? 'border-left:3px solid #818cf8;border-top:2px solid #c7d2fe;'
+                : p._isExpanded ? 'border-left:3px solid #c7d2fe;'
+                : (isMulti ? 'border-left:3px solid #818cf8;' : '');
             return `<tr style="background:${bg};${bl}">
                 <td style="text-align:center;">${idx+1}</td>
-                <td>${monthLabel}${isMulti?` <small style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</small>`:''}</td>
+                <td>${monthLabel}${expandedTag}${isMulti?` <small style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</small>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td>${chitDisp}</td>
                 <td style="color:#065f46;font-weight:700;">Rs.${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
@@ -2211,8 +2297,35 @@ async function generateGroupPDF(gid){
         const mPaid = mp.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
         const mBal  = mp.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
         const slotBadge = totalSlots>1 ? ` <span style="background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:800;">Chit ${slotNum}/${totalSlots}</span>` : '';
-        const rows = mp.map((p,idx) => {
-            const isMulti = p.numMonths && p.numMonths > 1;
+        // Expand perMonthBreakdown into individual rows for group PDF
+        const expandedMp = [];
+        mp.forEach(p => {
+            const isMultiP = p.numMonths && p.numMonths > 1;
+            const hasPMB = isMultiP && p.perMonthBreakdown && p.perMonthBreakdown.length > 0;
+            if(hasPMB){
+                p.perMonthBreakdown.forEach((pmb, bi) => {
+                    expandedMp.push({
+                        _isExpanded: true,
+                        _groupIdx: bi,
+                        _groupSize: p.perMonthBreakdown.length,
+                        id: p.id,
+                        date: p.date,
+                        chit: pmb.amt,
+                        paid: pmb.amt,
+                        balance: 0,
+                        paidBy: p.paidBy,
+                        chitPicked: bi === 0 ? p.chitPicked : 'No',
+                        monthSlot: pmb.slot,
+                        monthSlots: [pmb.slot],
+                        numMonths: 1,
+                    });
+                });
+            } else {
+                expandedMp.push(p);
+            }
+        });
+        const rows = expandedMp.map((p,idx) => {
+            const isMulti = !p._isExpanded && p.numMonths && p.numMonths > 1;
             let monthLabel = '—';
             if(isMulti && p.monthSlots && p.monthSlots.length>0){
                 const f = allDueDates[p.monthSlots[0]] ? fmtDate(allDueDates[p.monthSlots[0]]) : '—';
@@ -2223,10 +2336,18 @@ async function generateGroupPDF(gid){
                 monthLabel = si>=0 && allDueDates[si] ? fmtDate(allDueDates[si]) : '—';
             }
             const cp = p.chitPicked === 'Yes';
-            const bg = cp ? '#f0fff8' : (isMulti ? '#eef2ff' : (idx%2===0?'#f9fafb':'#fff'));
-            return `<tr style="background:${bg};">
+            const expandedTag = p._isExpanded
+                ? ` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;">${p._groupIdx+1}/${p._groupSize}</span>`
+                : '';
+            const bg = cp ? '#f0fff8'
+                : p._isExpanded ? (p._groupIdx % 2 === 0 ? '#eef2ff' : '#f5f3ff')
+                : (isMulti ? '#eef2ff' : (idx%2===0?'#f9fafb':'#fff'));
+            const bl = p._isExpanded && p._groupIdx === 0 ? 'border-left:3px solid #818cf8;border-top:2px solid #c7d2fe;'
+                : p._isExpanded ? 'border-left:3px solid #c7d2fe;'
+                : cp ? 'border-left:3px solid #10b981;' : '';
+            return `<tr style="background:${bg};${bl}">
                 <td style="text-align:center;color:#888;">${idx+1}</td>
-                <td>${monthLabel}${isMulti?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</span>`:''}</td>
+                <td>${monthLabel}${expandedTag}${isMulti?` <span style="background:#e0e7ff;color:#3730a3;border-radius:3px;padding:1px 4px;font-size:9px;">${p.numMonths}mo</span>`:''}</td>
                 <td>${fmtDate(p.date)}</td>
                 <td>₹${(parseFloat(p.chit)||0).toLocaleString('en-IN')}${isMulti?`/mo×${p.numMonths}`:''}</td>
                 <td style="color:#065f46;font-weight:700;">₹${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
