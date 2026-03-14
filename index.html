@@ -1770,11 +1770,11 @@ function ncpPrint(){
         #gsContent .chip{background:#fff;padding:8px 10px;font-size:11px;text-align:center;}
         #gsContent .chip-v{font-size:15px;font-weight:800;margin-bottom:2px;}
         #gsContent .chip-l{font-size:9px;color:#888;text-transform:uppercase;}
-        #gsContent table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;table-layout:auto;}
+        #gsContent table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:10px;table-layout:auto;}
         #gsContent thead tr{background:#fef3c7;}
-        #gsContent th{border:1px solid #d1a832;padding:8px 10px;font-size:11px;text-transform:uppercase;color:#555;font-weight:800;}
-        #gsContent td{border:1px solid #e5e7eb;padding:8px 10px;font-size:12px;}
-        #gsContent tfoot td{background:#fff8e1;font-weight:800;border-top:2px solid #f39c12;font-size:12px;}
+        #gsContent th{border:1px solid #d1a832;padding:10px 12px;font-size:14px;text-transform:uppercase;color:#555;font-weight:800;}
+        #gsContent td{border:1px solid #e5e7eb;padding:10px 12px;font-size:15px;}
+        #gsContent tfoot td{background:#fff8e1;font-weight:800;border-top:2px solid #f39c12;font-size:15px;}
         #gsContent .notice{background:#fffbe6;border:1px solid #f5d060;border-radius:6px;padding:10px 14px;font-size:11px;color:#555;margin-bottom:14px;line-height:1.7;}
         #gsContent .ftr{margin-top:14px;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#aaa;}
         #gsContent .pbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
@@ -1824,13 +1824,13 @@ function ncpPrint(){
         <thead><tr>
             <th style="width:8%;text-align:center;">Month #</th>
             <th style="width:25%;">Due Date</th>
-            <th style="width:30%;">Monthly Pay<br><span style="font-weight:400;font-size:9px;">(Amount each member pays)</span></th>
-            <th style="width:25%;">Chit Payout<br><span style="font-weight:400;font-size:9px;">(Prize the winner receives)</span></th>
+            <th style="width:30%;">Monthly Pay<br><span style="font-weight:400;font-size:11px;">(Amount each member pays)</span></th>
+            <th style="width:25%;">Chit Payout<br><span style="font-weight:400;font-size:11px;">(Prize the winner receives)</span></th>
             <th style="width:12%;text-align:center;">% Return</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
-            <td colspan="2" style="text-align:right;padding-right:10px;font-size:11px;font-weight:800;">GRAND TOTAL</td>
+            <td colspan="2" style="text-align:right;padding-right:10px;font-size:14px;font-weight:800;">GRAND TOTAL</td>
             <td style="font-size:13px;font-weight:900;color:#065f46;">&#8377;${totalPay.toLocaleString('en-IN')}</td>
             <td></td><td></td>
         </tr></tfoot>
