@@ -350,7 +350,7 @@
                     <div style="display:flex;gap:4px;margin-bottom:4px;font-size:0.62rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;padding:0 2px;">
                         <span style="width:26px;text-align:center;">#</span>
                         <span style="flex:1.4;">Due Date</span>
-                        <span style="flex:1.2;">Member Pay (₹)</span>
+                        <span style="flex:1.2;">Pay/Member (₹)</span>
                         <span style="flex:1.2;">Chit Payout (₹)</span>
                         <span style="width:52px;text-align:center;">Payout%</span>
                         <span style="width:80px;text-align:right;color:#34d399;">Owner Profit</span>
@@ -361,7 +361,10 @@
                 <!-- Total row -->
                 <div id="ncp_total" style="display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(16,185,129,0.08);border-top:1px solid var(--border);font-size:0.82rem;font-weight:800;">
                     <span style="width:26px;"></span>
-                    <span style="flex:1.4;color:#f39c12;">TOTAL</span>
+                    <div style="flex:1.4;">
+                        <div style="color:#f39c12;font-size:0.82rem;">TOTAL</div>
+                        <div style="color:var(--text-dim);font-size:0.52rem;font-weight:600;margin-top:1px;">1 member pays</div>
+                    </div>
                     <span id="ncp_totalPay" style="flex:1.2;color:#a5b4fc;"></span>
                     <span id="ncp_totalPayout" style="flex:1.2;color:#f59e0b;"></span>
                     <span style="width:52px;"></span>
@@ -1698,14 +1701,16 @@ function ncpGetDueDate(base, monthIndex, dueDay){
 
 function ncpUpdateTotalsAndPct(){
     const rows = document.querySelectorAll('#ncp_rows .ncp-row');
+    // members is only used for Owner Profit calculation (collected = members × pay)
+    // Total Member Pay = sum of individual monthly pays (what ONE member pays total)
     const members = parseInt(document.getElementById('ncp_members').value)||1;
     let totalPay = 0, totalPayout = 0, totalProfit = 0;
     rows.forEach(row => {
         const mp = parseFloat(row.querySelector('.ncp-pay').value)||0;
         const cp = parseFloat(row.querySelector('.ncp-chit').value)||0;
-        totalPay    += members * mp;
+        totalPay    += mp;                   // sum of per-member monthly amounts only
         totalPayout += cp;
-        totalProfit += members * mp - cp;
+        totalProfit += members * mp - cp;    // owner profit still uses full collection
     });
     const tpEl = document.getElementById('ncp_totalPay');
     const tcEl = document.getElementById('ncp_totalPayout');
@@ -1719,6 +1724,7 @@ function ncpUpdateTotalsAndPct(){
         const cp = parseFloat(row.querySelector('.ncp-chit').value)||0;
         const collected = members * mp;
         const profit = collected - cp;
+        // Payout% = chit payout vs total collected from all members that month
         const pct = collected > 0 ? ((cp/collected)*100).toFixed(1) : '—';
         const pctNum = collected > 0 ? (cp/collected)*100 : 0;
         const pctEl = row.querySelector('.ncp-pct');
@@ -1897,7 +1903,7 @@ function ncpPrint(){
     const startDisp   = base ? base.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : '—';
     const today       = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
     const rows        = document.querySelectorAll('#ncp_rows .ncp-row');
-    let totalCollected=0, totalPayout=0, totalProfit=0;
+    let totalMemberPay=0, totalCollected=0, totalPayout=0, totalProfit=0;
     const rowData=[];
     rows.forEach((row,i)=>{
         const mp  = parseFloat(row.querySelector('.ncp-pay').value)||0;
@@ -1905,7 +1911,8 @@ function ncpPrint(){
         const due = row.querySelector('.ncp-due').textContent;
         const collected = members * mp;
         const profit = collected - cp;
-        totalCollected += collected;
+        totalMemberPay += mp;          // sum of per-member monthly pays (one member's total)
+        totalCollected += collected;   // total collected from all members (for profit calc)
         totalPayout    += cp;
         totalProfit    += profit;
         rowData.push({i, mp, cp, due, collected, profit});
@@ -2015,7 +2022,7 @@ function ncpPrint(){
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
             <td colspan="2" style="text-align:right;padding-right:10px;font-weight:800;">GRAND TOTAL</td>
-            <td style="font-weight:900;color:#1e40af;">&#8377;${totalCollected.toLocaleString('en-IN')}</td>
+            <td style="font-weight:900;color:#1e40af;">&#8377;${totalMemberPay.toLocaleString('en-IN')}</td>
             <td style="font-weight:900;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</td>
             <td></td>
         </tr></tfoot>
