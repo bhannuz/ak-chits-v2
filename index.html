@@ -1917,14 +1917,12 @@ function ncpPrint(){
         const payoutPct = collected > 0 ? ((cp/collected)*100).toFixed(1) : '—';
         const payoutPctNum = collected > 0 ? (cp/collected)*100 : 0;
         const pctColor = payoutPctNum<=80?'#065f46':payoutPctNum<=95?'#92400e':'#991b1b';
-        const profitColor = profit>=0 ? '#065f46' : '#991b1b';
         return `<tr style="background:${i%2===0?'#f9fafb':'#fff'};">
             <td style="text-align:center;color:#888;font-weight:800;font-size:13px;">${i+1}</td>
             <td style="font-weight:600;">${due}</td>
-            <td style="color:#1e40af;font-weight:700;">&#8377;${mp.toLocaleString('en-IN')}<br><span style="font-size:10px;color:#888;font-weight:400;">×${members} = &#8377;${collected.toLocaleString('en-IN')}</span></td>
+            <td style="color:#1e40af;font-weight:700;">&#8377;${mp.toLocaleString('en-IN')}</td>
             <td style="color:#92400e;font-weight:700;">${cp?'&#8377;'+cp.toLocaleString('en-IN'):'—'}</td>
             <td style="text-align:center;font-weight:800;color:${pctColor};">${payoutPct!=='—'?payoutPct+'%':'—'}</td>
-            <td style="font-weight:800;color:${profitColor};">&#8377;${profit.toLocaleString('en-IN')}</td>
         </tr>`;
     }).join('');
 
@@ -2008,12 +2006,11 @@ function ncpPrint(){
     <div class="notice">&#128161; <b>How this Chit Works:</b> ${members||'?'} members pay monthly. Winner each month receives the chit payout (less than full collection). The difference is <b>owner profit</b>. Mode: <b>${modeLabels[payoutMode]||payoutMode}</b>. Commission: <b>${commPct}%</b>. Escalation: <b>${escalPct>0?'+'+escalPct+'% per month':'Flat rate'}</b>.</div>
     <table>
         <thead><tr>
-            <th style="width:6%;text-align:center;">Mo#</th>
-            <th style="width:18%;">Due Date</th>
-            <th style="width:28%;">Member Pay (Each → Total)</th>
-            <th style="width:20%;">Chit Payout<br><span style="font-weight:400;font-size:10px;">(Winner receives)</span></th>
-            <th style="width:10%;text-align:center;">Payout %</th>
-            <th style="width:18%;color:#15803d;">Owner Profit</th>
+            <th style="width:7%;text-align:center;">Mo#</th>
+            <th style="width:22%;">Due Date</th>
+            <th style="width:33%;">Monthly Pay<br><span style="font-weight:400;font-size:10px;">(Amount each member pays)</span></th>
+            <th style="width:24%;">Chit Payout<br><span style="font-weight:400;font-size:10px;">(Winner receives)</span></th>
+            <th style="width:14%;text-align:center;">Payout %</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
@@ -2021,7 +2018,6 @@ function ncpPrint(){
             <td style="font-weight:900;color:#1e40af;">&#8377;${totalCollected.toLocaleString('en-IN')}</td>
             <td style="font-weight:900;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</td>
             <td></td>
-            <td style="font-weight:900;color:#15803d;">&#8377;${totalProfit.toLocaleString('en-IN')} (${profitPct}%)</td>
         </tr></tfoot>
     </table>
     <div class="ftr"><span>AK Chit Funds &bull; Admin Portal</span><span>${name} &bull; ${today}</span><span>CONFIDENTIAL</span></div>
@@ -3002,7 +2998,7 @@ function ncpRenderSavedList(planners){
             return `<div style="display:flex;align-items:center;gap:8px;background:${isActive?'rgba(99,102,241,0.15)':'var(--card-bg)'};border:1px solid ${isActive?'rgba(99,102,241,0.5)':'var(--border)'};border-radius:12px;padding:10px 14px;">
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:0.82rem;font-weight:800;color:${isActive?'#a5b4fc':'white'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${isActive?'✏️ ':''}${p._label||k}</div>
-                    <div style="font-size:0.58rem;color:var(--text-dim);margin-top:2px;">${p.ncp_name||'—'} &nbsp;·&nbsp; ${p.ncp_members||'?'} members &nbsp;·&nbsp; ${p.ncp_duration||'?'} months &nbsp;·&nbsp; ₹${p.ncp_amount?Number(p.ncp_amount).toLocaleString('en-IN'):'?'}</div>
+                    <div style="font-size:0.58rem;color:var(--text-dim);margin-top:2px;">${(()=>{ const mems=parseInt(p.ncp_members)||0; const rows=p._rows||[]; const totalPay=rows.reduce((s,r)=>s+(parseFloat(r.pay)||0),0)*mems; const totalPayout=rows.reduce((s,r)=>s+(parseFloat(r.chit)||0),0); const profit=totalPay-totalPayout; return (p.ncp_name||'—')+' &nbsp;·&nbsp; '+(p.ncp_members||'?')+' members &nbsp;·&nbsp; '+(p.ncp_duration||'?')+' months'+(totalPay>0?' &nbsp;·&nbsp; Pay: ₹'+totalPay.toLocaleString('en-IN'):'')+((totalPay>0&&totalPayout>0)?' &nbsp;·&nbsp; <span style="color:#34d399;font-weight:800;">Profit: ₹'+profit.toLocaleString('en-IN')+'</span>':'')+''; })()}</div>
                     <div style="font-size:0.55rem;color:var(--text-dim);margin-top:1px;">💾 ${p._savedAt||'—'}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
