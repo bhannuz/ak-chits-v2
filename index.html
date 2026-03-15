@@ -4,47 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>AK Chit Funds - Admin Portal v2.2</title>
+    <title>AK Chit Funds - Admin Portal v2.3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* CSS from your attached format */
         :root { --bg-dark:#0a0e1a; --card-bg:#141b2d; --input-bg:#1c253b; --accent-gold:linear-gradient(90deg,#ff9800,#f57c00); --text-main:#ffffff; --text-dim:#8e9aaf; --border:#252f48; }
+        * { box-sizing:border-box; }
         body { background-color:var(--bg-dark); color:var(--text-main); font-family:'Segoe UI',sans-serif; padding-bottom:120px; }
         .app-header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border); }
         .brand { color:#f39c12; font-weight:bold; font-size:1.3rem; }
-        
-        /* Modals */
+        .stat-card { background:var(--card-bg); border:1px solid var(--border); border-radius:15px; padding:15px; text-align:center; }
+        .stat-num { font-size:1.3rem; font-weight:bold; display:block; }
+        .stat-label { font-size:0.65rem; color:var(--text-dim); text-transform:uppercase; }
+
+        /* MODALS */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:2000; padding:20px; overflow-y:auto; }
         .modal-content-custom { background:var(--card-bg); border-radius:25px; padding:25px; max-width:450px; margin:20px auto; border:1px solid var(--border); }
         .form-input { background:var(--input-bg); border:1px solid var(--border); color:white; padding:12px; border-radius:12px; width:100%; margin-bottom:12px; font-size:0.9rem; }
         .btn-save { background:var(--accent-gold); color:black; border:none; width:100%; padding:14px; border-radius:14px; font-weight:bold; cursor:pointer; }
-        .btn-cancel { background:var(--input-bg); color:white; border:none; width:100%; padding:12px; border-radius:14px; cursor:pointer; margin-top:10px; }
+        .btn-cancel { background:var(--input-bg); color:white; border:none; width:100%; padding:12px; border-radius:14px; cursor:pointer; }
 
-        /* Tables */
-        .table-custom { color:white; font-size:0.75rem; width:100%; border-collapse:collapse; }
-        .table-custom th { color:var(--text-dim); border-bottom:1px solid var(--border); padding:8px 5px; text-transform:uppercase; font-size:0.65rem; }
-        .table-custom td { padding:10px 5px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
-
-        /* WhatsApp Button */
-        .btn-whatsapp-sm { background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.35); color:#25d366; border-radius:7px; padding:4px 10px; font-size:0.68rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; }
+        /* WhatsApp Button Custom */
+        .btn-whatsapp-sm { background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.35); color:#25d366; border-radius:7px; padding:6px 12px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
         .btn-whatsapp-sm:hover { background:#25d366; color:white; }
 
-        /* Navigation */
+        /* Tables & Tabs */
+        .table-custom { color:white; font-size:0.75rem; width:100%; border-collapse:collapse; }
+        .table-custom th { color:var(--text-dim); border-bottom:1px solid var(--border); padding:8px 5px; text-transform:uppercase; font-size:0.65rem; }
+        .table-custom td { padding:10px 5px; border-bottom:1px solid rgba(255,255,255,0.05); }
         .nav-bar { position:fixed; bottom:0; width:100%; background:#070b14; display:flex; justify-content:space-around; padding:12px 0; border-top:1px solid var(--border); z-index:1000; }
         .nav-item { cursor:pointer; text-align:center; font-size:0.62rem; color:var(--text-dim); }
         .nav-item.active { color:#f39c12; }
         .tab-content { display:none; }
         .tab-content.active { display:block; }
+        .list-group-header { background:#1c253b; padding:12px 15px; border-radius:10px; margin-top:12px; font-weight:bold; color:#f39c12; border-left:4px solid #f39c12; display:flex; justify-content:space-between; cursor:pointer; }
 
-        /* Login */
+        /* Login Screen */
         #loginScreen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-dark); z-index:9000; display:flex; align-items:center; justify-content:center; }
         .login-card { background:var(--card-bg); border:1px solid var(--border); border-radius:28px; padding:32px; width:100%; max-width:400px; text-align:center; }
-        
-        /* List Tab Header */
-        .list-group-header { background:#1c253b; padding:12px 15px; border-radius:10px; margin-top:12px; font-weight:bold; color:#f39c12; border-left:4px solid #f39c12; display:flex; justify-content:space-between; cursor:pointer; }
     </style>
 </head>
 <body>
@@ -68,12 +69,12 @@
     </div>
 
     <div id="homeTab" class="tab-content active">
-        <div class="row g-2 mt-3">
-            <div class="col-6"><div class="stat-card p-3 text-center" style="background:var(--card-bg); border-radius:15px; border:1px solid var(--border);"><span id="mCount">0</span><br><small class="text-dim">Members</small></div></div>
-            <div class="col-6"><div class="stat-card p-3 text-center" style="background:var(--card-bg); border-radius:15px; border:1px solid var(--border);"><span id="gCount">0</span><br><small class="text-dim">Groups</small></div></div>
+        <div class="row g-2 mt-3 text-center">
+            <div class="col-6"><div class="stat-card"><span class="stat-num" id="mCount">0</span><span class="stat-label">Members</span></div></div>
+            <div class="col-6"><div class="stat-card"><span class="stat-num" id="gCount">0</span><span class="stat-label">Groups</span></div></div>
         </div>
         <button class="btn-save mt-3" onclick="openModal('paymentModal')">💳 Record Payment</button>
-        <div id="ledgerData" class="mt-3"></div>
+        <div id="ledgerData" class="mt-4"></div>
     </div>
 
     <div id="groupsTab" class="tab-content">
@@ -82,15 +83,19 @@
 
     <div id="listTab" class="tab-content">
         <div id="simpleListArea" class="mt-2"></div>
-        <div class="p-3 mt-4" style="background:var(--card-bg); border-radius:18px; border:1px solid var(--border);">
-            <h6 style="color:#f39c12;">📋 New Chit Planner</h6>
-            <input type="text" id="ncp_name" class="form-input" placeholder="Group Name">
-            <input type="number" id="ncp_amount" class="form-input" placeholder="Chit Amount (₹)">
-            <input type="number" id="ncp_members" class="form-input" placeholder="No. of Members">
-            <input type="number" id="ncp_duration" class="form-input" placeholder="Duration (Months)">
+        <div id="newChitPlanner" class="p-3 mt-4" style="background:var(--card-bg); border:1px solid var(--border); border-radius:18px;">
+            <h6 style="color:#f39c12; margin-bottom:15px;">📋 New Chit Planner</h6>
+            <div class="row g-2">
+                <div class="col-12"><input type="text" id="ncp_name" class="form-input" placeholder="Group Name (e.g. Gold Chit)"></div>
+                <div class="col-6"><input type="number" id="ncp_amount" class="form-input" placeholder="Chit Amount (₹)"></div>
+                <div class="col-6"><input type="number" id="ncp_members" class="form-input" placeholder="No. of Members"></div>
+                <div class="col-6"><input type="number" id="ncp_duration" class="form-input" placeholder="Duration (Months)"></div>
+                <div class="col-6"><input type="number" id="ncp_commission" class="form-input" placeholder="Commission %" value="5"></div>
+            </div>
             <button class="btn-save" onclick="ncpGenerate()">⚡ Generate Schedule</button>
-            <div id="ncp_tableWrap" class="mt-3" style="display:none;">
-                <div id="ncp_rows" style="font-size:0.75rem;"></div>
+            <div id="ncp_tableWrap" class="mt-3" style="display:none; overflow-x:auto;">
+                <div id="ncp_chips" style="display:flex; gap:10px; margin-bottom:10px;"></div>
+                <div id="ncp_rows"></div>
             </div>
         </div>
     </div>
@@ -98,8 +103,8 @@
     <div id="backupTab" class="tab-content">
         <div class="p-4 mt-3 text-center" style="background:var(--card-bg); border-radius:20px; border:1px solid var(--border);">
             <h6 class="text-warning">💾 Data Management</h6>
-            <button class="btn btn-outline-warning w-100 mb-2 py-3" onclick="exportFullBackup()">Download JSON</button>
-            <button class="btn btn-outline-success w-100 mb-3 py-3" onclick="exportToExcel()">Export Excel</button>
+            <button class="btn btn-outline-warning w-100 mb-2 py-3" onclick="exportFullBackup()">💾 Download JSON Backup</button>
+            <button class="btn btn-outline-success w-100 mb-3 py-3" onclick="exportToExcel()">📊 Export to Excel</button>
             <hr style="border-color:var(--border);">
             <input type="file" id="restoreFile" class="form-control bg-dark text-white mb-2" accept=".json">
             <button class="btn btn-danger w-100 py-3" onclick="confirmRestore()">🔄 Restore Data</button>
@@ -113,7 +118,7 @@
         <input type="text" id="pMemberId" class="form-input" placeholder="Member ID">
         <input type="text" id="pGroupId" class="form-input" placeholder="Group ID">
         <input type="number" id="pAmount" class="form-input" placeholder="Amount Paid">
-        <button class="btn-save" onclick="savePayment()">✓ Save Payment</button>
+        <button class="btn-save" onclick="savePayment()">✓ Save</button>
         <button class="btn-cancel" onclick="closeModal('paymentModal')">Cancel</button>
     </div>
 </div>
@@ -136,39 +141,46 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let waWindow = null;
-    let _dbCache = { members: [], groups: [], payments: [] };
 
+    let CURRENT_USER = null;
+    let _dbCache = { members: [], groups: [], payments: [] };
+    let waWindow = null;
+
+    // LOGIN & AUTH
     async function handleLoginSubmit() {
         const phone = document.getElementById('loginPhone').value.trim();
         if (phone === "9876543210") {
+            CURRENT_USER = { role: 'admin' };
             document.getElementById('loginScreen').style.display = 'none';
             updateUI();
         } else {
             const snap = await db.collection('members').where('phone', '==', phone).get();
-            if (!snap.empty) { document.getElementById('loginScreen').style.display = 'none'; updateUI(); }
-            else alert("Unauthorized");
+            if (!snap.empty) {
+                CURRENT_USER = { role: 'member', id: snap.docs[0].id };
+                document.getElementById('loginScreen').style.display = 'none';
+                updateUI();
+            } else { alert("Not registered."); }
         }
     }
 
     function handleLogout() { location.reload(); }
 
-    function switchTab(t) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(t + 'Tab').classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
-    }
-
+    // WHATSAPP REUSING TAB
     function sendWhatsAppReminder(mId, gId) {
         const m = _dbCache.members.find(x => x.id === mId);
         const g = _dbCache.groups.find(x => x.id === gId);
         let phone = (m.phone || '').replace(/\D/g, '');
         if (phone.length === 10) phone = '91' + phone;
-        const msg = encodeURIComponent(`*REMINDER* 🏆\n\nDear *${m.name}*,\nThis is a reminder for your chit: *${g.name}*.\n\n*AK Chit Funds*`);
+        
+        const msg = encodeURIComponent(`*PAYMENT REMINDER* 🏆\n\nDear *${m.name}*,\nThis is a reminder for your contribution in *${g.name}*.\n\nThank you,\n*AK Chit Funds*`);
         const url = `https://wa.me/${phone}?text=${msg}`;
-        if (waWindow && !waWindow.closed) { waWindow.location.href = url; waWindow.focus(); }
-        else waWindow = window.open(url, "wa_chat");
+
+        if (waWindow && !waWindow.closed) {
+            waWindow.location.href = url;
+            waWindow.focus();
+        } else {
+            waWindow = window.open(url, "wa_chat");
+        }
     }
 
     async function updateUI() {
@@ -176,6 +188,7 @@
         const gSnap = await db.collection('groups').get();
         _dbCache.members = mSnap.docs.map(d => ({id: d.id, ...d.data()}));
         _dbCache.groups = gSnap.docs.map(d => ({id: d.id, ...d.data()}));
+        
         document.getElementById('mCount').innerText = _dbCache.members.length;
         document.getElementById('gCount').innerText = _dbCache.groups.length;
         renderGroups();
@@ -186,12 +199,20 @@
         let html = '';
         _dbCache.groups.forEach(g => {
             const ms = _dbCache.members.filter(m => m.groupIds && m.groupIds.includes(g.id));
-            html += `<div class="p-3 mb-3" style="background:var(--card-bg); border:1px solid var(--border); border-radius:15px;">
-                <h6 class="text-warning">📂 ${g.name}</h6>
+            html += `<div class="group-card p-3 mb-3" style="background:var(--card-bg); border:1px solid var(--border); border-radius:15px;">
+                <h6 style="color:#f39c12; margin-bottom:15px;">📂 ${g.name}</h6>
                 <table class="table-custom">
                     <thead><tr><th>Member</th><th class="text-end">Action</th></tr></thead>
-                    <tbody>${ms.map(m => `<tr><td><b>${m.name}</b><br><small class="text-dim">${m.phone}</small></td><td class="text-end"><button class="btn-whatsapp-sm" onclick="sendWhatsAppReminder('${m.id}','${g.id}')"><i class="fab fa-whatsapp"></i> Remind</button></td></tr>`).join('')}</tbody>
-                </table></div>`;
+                    <tbody>${ms.map(m => `
+                        <tr>
+                            <td><b>${m.name}</b><br><small style="color:var(--text-dim);">${m.phone || ''}</small></td>
+                            <td class="text-end">
+                                <button class="btn-whatsapp-sm" onclick="sendWhatsAppReminder('${m.id}','${g.id}')">
+                                    <i class="fab fa-whatsapp"></i> Remind
+                                </button>
+                            </td>
+                        </tr>`).join('')}
+                    </tbody></table></div>`;
         });
         document.getElementById('groupListArea').innerHTML = html;
     }
@@ -203,26 +224,50 @@
         }).join('');
     }
 
+    // RESTORED CHIT PLANNER LOGIC
     function ncpGenerate() {
-        const amt = document.getElementById('ncp_amount').value;
-        const mem = document.getElementById('ncp_members').value;
-        const dur = document.getElementById('ncp_duration').value;
-        if (!amt || !mem || !dur) return;
-        let html = '<table class="table-custom mt-2"><thead><tr><th>Month</th><th>Pay/Member</th></tr></thead><tbody>';
-        for (let i = 1; i <= dur; i++) { html += `<tr><td>Month ${i}</td><td>₹${Math.round(amt / mem)}</td></tr>`; }
-        document.getElementById('ncp_rows').innerHTML = html + '</tbody></table>';
+        const amt = parseFloat(document.getElementById('ncp_amount').value);
+        const mems = parseInt(document.getElementById('ncp_members').value);
+        const dur = parseInt(document.getElementById('ncp_duration').value);
+        const comm = parseFloat(document.getElementById('ncp_commission').value);
+
+        if (!amt || !mems || !dur) return;
+
+        let html = `<table class="table-custom mt-2"><thead><tr><th>Month</th><th>Pay/Member</th><th>Payout</th></tr></thead><tbody>`;
+        const commAmt = (amt * comm) / 100;
+        const monthlyPay = Math.round(amt / mems);
+
+        for (let i = 1; i <= dur; i++) {
+            html += `<tr><td>Month ${i}</td><td>₹${monthlyPay.toLocaleString()}</td><td>₹${(amt - commAmt).toLocaleString()}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById('ncp_rows').innerHTML = html;
         document.getElementById('ncp_tableWrap').style.display = 'block';
     }
 
+    // BACKUP & RESTORE
     async function exportFullBackup() {
-        const d = { m: _dbCache.members, g: _dbCache.groups };
+        const data = { members: _dbCache.members, groups: _dbCache.groups };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type: 'application/json'}));
-        a.download = `AK_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `AK_Chit_Backup_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
     }
 
-    function exportToExcel() { alert("Excel library loaded. Preparing file..."); }
+    function exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(_dbCache.members);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Members");
+        XLSX.writeFile(wb, "AK_Chit_Report.xlsx");
+    }
+
+    function switchTab(t) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(t + 'Tab').classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('active');
+    }
 
     function openModal(id) { document.getElementById(id).style.display = 'block'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
