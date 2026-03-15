@@ -393,6 +393,82 @@
             <p class="small mt-2 text-center" style="color:#ef4444;">⚠️ This will overwrite existing data</p>
         </div>
     </div>
+
+    <!-- WHATSAPP TAB -->
+    <div id="whatsappTab" class="tab-content">
+        <div style="padding:4px 0 12px;">
+
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <div>
+                    <div style="font-size:1.05rem;font-weight:900;color:#25D366;">📲 WhatsApp Reminders</div>
+                    <div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px;">Send payment reminders to members via WhatsApp</div>
+                </div>
+                <button onclick="waLoadData()" style="background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.4);color:#25D366;border-radius:10px;padding:7px 14px;font-size:0.75rem;font-weight:800;cursor:pointer;">🔄 Refresh</button>
+            </div>
+
+            <!-- Filters Row -->
+            <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px;">
+                <div style="font-size:0.6rem;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🔍 Filter Members</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Group</div>
+                        <select id="waGroupFilter" class="form-input" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;" onchange="waApplyFilters()">
+                            <option value="">All Groups</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Payment Status</div>
+                        <select id="waStatusFilter" class="form-input" style="margin-bottom:0;padding:9px 11px;font-size:0.82rem;" onchange="waApplyFilters()">
+                            <option value="all">All Members</option>
+                            <option value="due" selected>Due This Month</option>
+                            <option value="overdue">Overdue (Past Months)</option>
+                            <option value="paid">Already Paid This Month</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Message Template -->
+                <div style="font-size:0.58rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Message Template</div>
+                <textarea id="waTemplate" rows="5" style="background:var(--input-bg);border:1px solid var(--border);color:white;padding:10px 12px;border-radius:12px;width:100%;font-size:0.82rem;resize:vertical;line-height:1.5;">Hi {name} 👋,
+
+This is a friendly reminder that your chit payment of *₹{amount}* for *{group}* is due on *{duedate}*.
+
+Months covered so far: {months_paid}/{total_months}
+Balance pending: ₹{balance}
+
+Please pay on time to avoid any issues. 🙏
+
+— AK Chit Funds</textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{name}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{amount}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{group}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{duedate}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{months_paid}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{total_months}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{balance}</span>
+                    <span style="font-size:0.6rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25D366;border-radius:5px;padding:2px 7px;font-weight:700;">{phone}</span>
+                </div>
+            </div>
+
+            <!-- Select All + Send All -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--text-dim);">
+                    <input type="checkbox" id="waSelectAll" onchange="waToggleAll(this.checked)" style="accent-color:#25D366;width:16px;height:16px;">
+                    Select All
+                </label>
+                <div style="display:flex;gap:8px;">
+                    <span id="waSelectedCount" style="font-size:0.7rem;color:var(--text-dim);align-self:center;"></span>
+                    <button onclick="waSendSelected()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:10px;padding:8px 18px;font-size:0.78rem;font-weight:800;cursor:pointer;">📲 Send to Selected</button>
+                </div>
+            </div>
+
+            <!-- Member List -->
+            <div id="waMemberList" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;color:var(--text-dim);padding:30px;font-size:0.82rem;">Loading members…</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ══════ MODALS ══════ -->
@@ -504,14 +580,15 @@
             <option>UPI</option><option>GPay</option><option>PhonePe</option>
             <option>PPay</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
         </select>
-        <label class="form-label-small">Chit Picked?</label>
+        <label class="form-label-small">Chit Status This Month</label>
         <select id="pChitPicked" class="form-input" onchange="toggleChitPickedName()">
-            <option value="No">No</option>
-            <option value="Yes">Yes ✅</option>
+            <option value="No">No Bid This Month</option>
+            <option value="Yes">Yes ✅ — Member Picked Chit</option>
+            <option value="Dividend">💰 Dividend — No Bid (Amount Distributed Back)</option>
         </select>
         <div id="chitPickedNameDiv" style="display:none;">
-            <label class="form-label-small">Chit Picked Value</label>
-            <input type="text" id="pChitPickedBy" class="form-input" placeholder="Enter chit picked value">
+            <label class="form-label-small" id="chitPickedNameLabel">Chit Picked Value / Dividend Amount</label>
+            <input type="text" id="pChitPickedBy" class="form-input" placeholder="Enter value or dividend amount per member">
         </div>
         <button class="btn-save" onclick="savePayment()">✓ Sync Payment</button>
         <button class="btn-cancel" onclick="closeModal('paymentModal')">Cancel</button>
@@ -545,14 +622,15 @@
             <option>UPI</option><option>GPay</option><option>PhonePe</option>
             <option>PPay</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
         </select>
-        <label class="form-label-small">Chit Picked?</label>
+        <label class="form-label-small">Chit Status This Month</label>
         <select id="epChitPicked" class="form-input" onchange="epTogglePickedName()">
-            <option value="No">No</option>
-            <option value="Yes">Yes ✅</option>
+            <option value="No">No Bid This Month</option>
+            <option value="Yes">Yes ✅ — Member Picked Chit</option>
+            <option value="Dividend">💰 Dividend — No Bid (Amount Distributed Back)</option>
         </select>
         <div id="epChitPickedNameDiv" style="display:none;">
-            <label class="form-label-small">Chit Picked Value</label>
-            <input type="text" id="epChitPickedBy" class="form-input" placeholder="Enter chit picked value">
+            <label class="form-label-small">Chit Picked Value / Dividend Amount</label>
+            <input type="text" id="epChitPickedBy" class="form-input" placeholder="Enter value or dividend amount per member">
         </div>
         <button class="btn-save" onclick="saveEditPayment()">✓ Update Payment</button>
         <button class="btn-danger-full" onclick="deletePayment()">🗑 Delete Payment</button>
@@ -631,6 +709,7 @@
     <div class="nav-item active" id="navHome" onclick="switchTab('home')">🏠<br>Home</div>
     <div class="nav-item" id="navGroups" onclick="switchTab('groups')">📁<br>Groups</div>
     <div class="nav-item" id="navList" onclick="switchTab('list')">📜<br>List</div>
+    <div class="nav-item" id="navWhatsapp" onclick="switchTab('whatsapp')">📲<br>Remind</div>
     <div class="nav-item" id="navBackup" onclick="switchTab('backup')">💾<br>Backup</div>
 </div>
 
@@ -673,7 +752,13 @@ function guardAdmin(fn){ return function(...args){ if(!isAdmin()){ showToast('�
 function openModal(id){document.getElementById(id).style.display='block';}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
-function toggleChitPickedName(){document.getElementById('chitPickedNameDiv').style.display=document.getElementById('pChitPicked').value==='Yes'?'block':'none';}
+function toggleChitPickedName(){
+    const val = document.getElementById('pChitPicked').value;
+    const show = val==='Yes' || val==='Dividend';
+    document.getElementById('chitPickedNameDiv').style.display = show ? 'block' : 'none';
+    const lbl = document.getElementById('chitPickedNameLabel');
+    if(lbl) lbl.textContent = val==='Dividend' ? 'Dividend Amount Per Member (₹)' : 'Chit Picked Value';
+}
 
 function clearMemberSearch(){
     document.getElementById('summarySearch').value='';
@@ -901,6 +986,7 @@ function switchTab(t){
     document.getElementById(t+'Tab').classList.add('active');
     document.getElementById('nav'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active');
     updateUI();
+    if(t==='whatsapp') setTimeout(waLoadData, 100);
 }
 
 async function migrateData(){
@@ -1037,7 +1123,7 @@ async function loadMemberLedger(){
                 <td style="color:#34d399;font-weight:700;">${fmtAmt(p.paid)}</td>
                 <td style="color:#f59e0b;">${fmtAmt(p.balance)}</td>
                 <td style="color:var(--text-dim);font-size:0.6rem;">${p.paidBy||'—'}</td>
-                <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
+                <td>${cp?`<div><span class="chit-yes-badge">✅ Picked</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:var(--text-dim);margin-top:3px;">by ${p.chitPickedBy}</div>`:''}</div>`:p.chitPicked==='Dividend'?`<div><span style="display:inline-block;background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);border-radius:5px;padding:2px 7px;font-size:0.6rem;font-weight:800;">💰 Dividend</span>${p.chitPickedBy?`<div style="font-size:0.58rem;color:#fbbf24;margin-top:3px;">₹${Number(p.chitPickedBy).toLocaleString('en-IN')}/member</div>`:''}</div>`:'<span class="chit-no">—</span>'}</td>
                 <td>${editBtn}</td>
             </tr>`;
         }).join('');
@@ -1411,10 +1497,12 @@ async function savePayment(){
     if(!paid)return showToast('❌ Enter amount paid',false);
 
     if(chitPicked==='Yes'){
-        const ps=await getCollection('payments');
-        const alreadyPicked=ps.some(p=>p.memberId===mid&&p.groupId===gid&&p.chitPicked==='Yes');
+        const psCheck=await getCollection('payments');
+        const alreadyPicked=psCheck.some(p=>p.memberId===mid&&p.groupId===gid&&p.chitPicked==='Yes');
         if(alreadyPicked)return showToast('❌ This member already picked the chit',false);
     }
+    // Dividend: validate amount entered
+    if(chitPicked==='Dividend' && !chitPickedBy) return showToast('❌ Enter dividend amount per member',false);
 
     if(isMulti){
         const monthSlots=getSelectedMonthSlots();
@@ -1507,7 +1595,9 @@ function epCalcBalance(){
     document.getElementById('epBal').value=Math.max(0,chit-paid);
 }
 function epTogglePickedName(){
-    document.getElementById('epChitPickedNameDiv').style.display=document.getElementById('epChitPicked').value==='Yes'?'block':'none';
+    const val = document.getElementById('epChitPicked').value;
+    const show = val==='Yes' || val==='Dividend';
+    document.getElementById('epChitPickedNameDiv').style.display = show ? 'block' : 'none';
 }
 
 async function saveEditPayment(){
@@ -1939,7 +2029,7 @@ function ncpPrint(){
         #gsContent .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #f39c12;padding-bottom:10px;margin-bottom:14px;}
         #gsContent .brand{font-size:22px;font-weight:900;color:#f39c12;}
         #gsContent .info-box{background:#fffbf0;border:2px solid #f39c12;border-radius:8px;padding:14px 18px;margin-bottom:14px;}
-        #gsContent .profit-box{background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+
         #gsContent .chip{background:#fff;padding:8px 10px;font-size:11px;text-align:center;}
         #gsContent .chip-v{font-size:15px;font-weight:800;margin-bottom:2px;}
         #gsContent .chip-l{font-size:9px;color:#888;text-transform:uppercase;}
@@ -1988,28 +2078,7 @@ function ncpPrint(){
             <div class="chip" style="flex:1;"><div class="chip-v">${escalPct>0?'+'+escalPct+'%':'Flat'}</div><div class="chip-l">Escalation</div></div>
         </div>
     </div>
-    <div class="profit-box">
-        <div style="flex:1;">
-            <div style="font-size:10px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">&#128200; Owner Profit Summary</div>
-            <div style="font-size:9px;color:#555;">Mode: <b>${modeLabels[payoutMode]||payoutMode}</b></div>
-        </div>
-        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #86efac;">
-            <div style="font-size:18px;font-weight:900;color:#15803d;">&#8377;${totalProfit.toLocaleString('en-IN')}</div>
-            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Profit</div>
-        </div>
-        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #86efac;">
-            <div style="font-size:18px;font-weight:900;color:#15803d;">${profitPct}%</div>
-            <div style="font-size:9px;color:#888;text-transform:uppercase;">Profit %</div>
-        </div>
-        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #d1fae5;">
-            <div style="font-size:15px;font-weight:800;color:#1e40af;">&#8377;${totalCollected.toLocaleString('en-IN')}</div>
-            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Collected</div>
-        </div>
-        <div style="text-align:center;padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #fde68a;">
-            <div style="font-size:15px;font-weight:800;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</div>
-            <div style="font-size:9px;color:#888;text-transform:uppercase;">Total Paid Out</div>
-        </div>
-    </div>
+
     <div class="notice">&#128161; <b>How this Chit Works:</b> ${members||'?'} members pay monthly. Winner each month receives the chit payout (less than full collection). The difference is <b>owner profit</b>. Mode: <b>${modeLabels[payoutMode]||payoutMode}</b>. Commission: <b>${commPct}%</b>. Escalation: <b>${escalPct>0?'+'+escalPct+'% per month':'Flat rate'}</b>.</div>
     <table>
         <thead><tr>
@@ -2021,12 +2090,94 @@ function ncpPrint(){
         </tr></thead>
         <tbody>${tableRows}</tbody>
         <tfoot><tr>
-            <td colspan="2" style="text-align:right;padding-right:10px;font-weight:800;">GRAND TOTAL</td>
+            <td colspan="2" style="text-align:right;padding-right:10px;font-weight:800;">TOTAL PER MEMBER</td>
             <td style="font-weight:900;color:#1e40af;">&#8377;${totalMemberPay.toLocaleString('en-IN')}</td>
-            <td style="font-weight:900;color:#92400e;">&#8377;${totalPayout.toLocaleString('en-IN')}</td>
+            <td style="color:#888;font-size:11px;font-style:italic;">Each month varies</td>
             <td></td>
         </tr></tfoot>
     </table>
+    <!-- Rules Section -->
+    <div style="margin-top:24px;page-break-inside:avoid;">
+        <div style="border-top:3px solid #f39c12;padding-top:14px;margin-bottom:14px;">
+            <div style="font-size:13px;font-weight:900;color:#92400e;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">&#128218; Chit Fund Rules &amp; How It Works</div>
+            <div style="font-size:9px;color:#888;">Please read carefully before participating</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+
+            <!-- Rule 1 -->
+            <div style="background:#fffbf0;border:1px solid #f5d060;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:6px;">&#9312; Monthly Contribution</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">Every member must pay the monthly amount on or before the due date. The total monthly collection = <b>Monthly Pay × ${members||'?'} members</b>. Late payments may attract a penalty as decided by the group.</div>
+            </div>
+
+            <!-- Rule 2 -->
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:6px;">&#9313; Monthly Bid (Auction)</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">Each month, members who have <b>not yet picked</b> the chit may place a bid — the lowest bid wins. The winner receives their bid amount. The difference between collection and bid is shared back as <b>dividend</b> to all members (after deducting foreman commission).</div>
+            </div>
+
+            <!-- Rule 3 -->
+            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:6px;">&#9314; Dividend Distribution</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;"><b>Example:</b> 20 members × ₹5,000 = ₹1,00,000 collected. Winner bids ₹85,000. Remaining ₹15,000 − commission ₹5,000 = ₹10,000 ÷ 20 = <b>₹500 dividend per member</b>. Your effective cost that month = ₹5,000 − ₹500 = <b>₹4,500 only</b>.</div>
+            </div>
+
+            <!-- Rule 4 -->
+            <div style="background:#fdf4ff;border:1px solid #d8b4fe;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#7e22ce;margin-bottom:6px;">&#9315; No Bid Month (Dividend to All)</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">If <b>no member bids</b> in a month, the full collection (after commission) is distributed equally back to all members. <b>Example:</b> ₹1,00,000 − ₹5,000 commission = ₹95,000 ÷ 20 = <b>₹4,750 back per member</b>. Net cost = ₹5,000 − ₹4,750 = <b>₹250 only</b>.</div>
+            </div>
+
+            <!-- Rule 5 -->
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#c2410c;margin-bottom:6px;">&#9316; One Pick Per Member</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">Each member can pick the chit <b>only once</b> during the entire chit duration of <b>${duration} months</b>. Once picked, the member continues paying monthly contributions until the chit cycle ends, but is no longer eligible to bid.</div>
+            </div>
+
+            <!-- Rule 6 -->
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#15803d;margin-bottom:6px;">&#9317; Last Member Benefit</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">The last remaining member who has not yet picked receives the <b>full chit amount</b> without any deduction — as they took the highest risk by waiting. This is the highest guaranteed payout in the group.</div>
+            </div>
+
+            <!-- Rule 7 -->
+            <div style="background:#fffbf0;border:1px solid #f5d060;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:6px;">&#9318; Foreman Commission</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">The foreman (chit organiser) deducts a commission of <b>${commPct||5}%</b> from the monthly collection each month as service fee for organising, managing records, and ensuring timely payouts. This is standard practice.</div>
+            </div>
+
+            <!-- Rule 8 -->
+            <div style="background:#fdf2f8;border:1px solid #f0abfc;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:800;color:#9d174d;margin-bottom:6px;">&#9319; Default &amp; Exit Policy</div>
+                <div style="font-size:10px;color:#444;line-height:1.6;">A member who has already picked the chit and defaults on future payments will be liable for the outstanding amount. Early exit is not permitted after picking. Members who have not yet picked may exit only with group consensus and forfeiture of dividends received.</div>
+            </div>
+
+        </div>
+
+        <!-- Signature block -->
+        <div style="border-top:1px dashed #ccc;padding-top:14px;margin-top:4px;">
+            <div style="font-size:9px;color:#888;margin-bottom:16px;text-align:center;">By participating in this chit fund, you confirm that you have read, understood, and agree to the above rules.</div>
+            <div style="display:flex;gap:24px;">
+                <div style="flex:1;border-top:1px solid #333;padding-top:6px;text-align:center;">
+                    <div style="font-size:9px;color:#555;font-weight:700;">Member Signature</div>
+                    <div style="font-size:9px;color:#888;margin-top:2px;">&nbsp;</div>
+                </div>
+                <div style="flex:1;border-top:1px solid #333;padding-top:6px;text-align:center;">
+                    <div style="font-size:9px;color:#555;font-weight:700;">Member Name</div>
+                    <div style="font-size:9px;color:#888;margin-top:2px;">&nbsp;</div>
+                </div>
+                <div style="flex:1;border-top:1px solid #333;padding-top:6px;text-align:center;">
+                    <div style="font-size:9px;color:#555;font-weight:700;">Date</div>
+                    <div style="font-size:9px;color:#888;margin-top:2px;">&nbsp;</div>
+                </div>
+                <div style="flex:1;border-top:1px solid #333;padding-top:6px;text-align:center;">
+                    <div style="font-size:9px;color:#555;font-weight:700;">Foreman Signature</div>
+                    <div style="font-size:9px;color:#888;margin-top:2px;">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="ftr"><span>AK Chit Funds &bull; Admin Portal</span><span>${name} &bull; ${today}</span><span>CONFIDENTIAL</span></div>
     </div>`;
     let ov=document.getElementById('printOverlay');
@@ -2190,7 +2341,7 @@ async function printMemberStatement(mid){
                 <td style="color:#065f46;font-weight:700;">Rs.${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
                 <td style="color:${(parseFloat(p.balance)||0)>0?'#92400e':'#065f46'};font-weight:700;">Rs.${(parseFloat(p.balance)||0).toLocaleString('en-IN')}</td>
                 <td>${p.paidBy||'—'}</td>
-                <td style="text-align:center;">${cp?'<span style="color:#065f46;font-weight:800;">YES</span>':'—'}</td>
+                <td style="text-align:center;">${cp?'<span style="color:#065f46;font-weight:800;">YES ✅</span>':p.chitPicked==='Dividend'?'<span style="color:#92400e;font-weight:800;">💰 DIV'+(p.chitPickedBy?' ₹'+Number(p.chitPickedBy).toLocaleString('en-IN'):'')+'</span>':'—'}</td>
             </tr>`;
         }).join('');
     }
@@ -2443,7 +2594,7 @@ async function generateGroupPDF(gid){
                 <td style="color:#065f46;font-weight:700;">₹${(parseFloat(p.paid)||0).toLocaleString('en-IN')}</td>
                 <td style="color:${(parseFloat(p.balance)||0)>0?'#92400e':'#065f46'};font-weight:700;">₹${(parseFloat(p.balance)||0).toLocaleString('en-IN')}</td>
                 <td style="color:#888;">${p.paidBy||'—'}</td>
-                <td style="text-align:center;">${cp?'<span style="color:#065f46;font-weight:800;">✅</span>':'—'}</td>
+                <td style="text-align:center;">${cp?'<span style="color:#065f46;font-weight:800;">✅</span>':p.chitPicked==='Dividend'?'<span style="color:#92400e;font-weight:800;">💰</span>':'—'}</td>
             </tr>`;
         }).join('');
         return `<div style="margin-bottom:16px;page-break-inside:avoid;">
@@ -2736,6 +2887,7 @@ function applyUserSession(user){
         document.getElementById('adminQuickBtns').style.display='none';
         document.getElementById('navGroups').style.display='none';
         document.getElementById('navList').style.display='none';
+        document.getElementById('navWhatsapp').style.display='none';
         document.getElementById('navBackup').style.display='none';
         document.querySelector('.nav-bar').style.display='none';
         document.getElementById('memberLedgerArea').style.display='block';
@@ -2752,6 +2904,7 @@ function handleLogout(){
     document.getElementById('memberHeader').style.display='none';
     document.getElementById('navGroups').style.display='';
     document.getElementById('navList').style.display='';
+    document.getElementById('navWhatsapp').style.display='';
     document.getElementById('navBackup').style.display='';
     document.querySelector('.nav-bar').style.display='';
     document.getElementById('adminStatCards').style.display='';
@@ -3031,6 +3184,224 @@ async function ncpRestoreSession(){
         ncpFillForm(planners[lastKey]);
         ncpRenderSavedList(planners);
     }
+}
+
+
+// ══════════════════════════════════════════
+// WHATSAPP REMINDER SYSTEM
+// ══════════════════════════════════════════
+
+let _waMembers = []; // full enriched list
+
+async function waLoadData(){
+    const listEl = document.getElementById('waMemberList');
+    if(!listEl) return;
+    listEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:30px;font-size:0.82rem;">⏳ Loading…</div>';
+
+    const members  = await getCollection('members');
+    const groups   = await getCollection('groups');
+    const payments = await getCollection('payments');
+    const today    = new Date().toISOString().split('T')[0];
+
+    // Populate group filter dropdown
+    const gSel = document.getElementById('waGroupFilter');
+    if(gSel){
+        const cur = gSel.value;
+        gSel.innerHTML = '<option value="">All Groups</option>' +
+            groups.map(g => `<option value="${g.id}" ${g.id===cur?'selected':''}>${g.name}</option>`).join('');
+    }
+
+    // Build enriched member-enrollment rows
+    _waMembers = [];
+    members.forEach(m => {
+        if(!m.phone) return; // skip members with no phone
+        let enrollments = m.enrollments;
+        if(!enrollments || !enrollments.length)
+            enrollments = (m.groupIds||[]).map(gid=>({enrollmentId:'', groupId:gid, label:''}));
+
+        enrollments.forEach(enr => {
+            const grp = groups.find(g => g.id === enr.groupId);
+            if(!grp) return;
+
+            const totalMonths = parseInt(grp.duration || grp.gDuration) || 21;
+            const dueDates    = getGroupDueDates(grp);
+            const mPays       = payments.filter(p =>
+                p.memberId === m.id && p.groupId === enr.groupId &&
+                (enr.enrollmentId ? p.enrollmentId === enr.enrollmentId : true)
+            );
+
+            // Months paid
+            const paidSlots = new Set();
+            mPays.forEach(p => {
+                if(Array.isArray(p.monthSlots)) p.monthSlots.forEach(s => paidSlots.add(s));
+                else if(p.monthSlot != null) paidSlots.add(p.monthSlot);
+            });
+            const monthsPaid = paidSlots.size;
+
+            // Current due slot
+            const curSlot   = getMonthSlot(dueDates, today);
+            const isPaid    = paidSlots.has(curSlot);
+
+            // Next unpaid slot
+            let nextUnpaidSlot = -1;
+            for(let i = 0; i < totalMonths; i++){
+                if(!paidSlots.has(i)){ nextUnpaidSlot = i; break; }
+            }
+
+            // Overdue = has unpaid slots BEFORE current slot
+            let overdueSlotsCount = 0;
+            for(let i = 0; i < curSlot; i++){
+                if(!paidSlots.has(i)) overdueSlotsCount++;
+            }
+
+            // Balance
+            const totalBal = mPays.reduce((s,p) => s + (parseFloat(p.balance)||0), 0);
+
+            // Monthly amount from last payment or group default
+            const lastPay   = mPays.length ? mPays.sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0] : null;
+            const monthlyAmt = lastPay ? (parseFloat(lastPay.chit)||0) : 0;
+
+            // Due date string for next unpaid month
+            const dueDateStr = nextUnpaidSlot >= 0 && dueDates[nextUnpaidSlot]
+                ? fmtDate(dueDates[nextUnpaidSlot]) : '—';
+
+            _waMembers.push({
+                id: m.id + '_' + enr.groupId + '_' + (enr.enrollmentId||''),
+                name: m.name,
+                phone: (m.phone||'').replace(/\D/g,'').slice(-10),
+                groupId: enr.groupId,
+                groupName: grp.name + (enr.label ? ` (${enr.label})` : ''),
+                totalMonths,
+                monthsPaid,
+                isPaidThisMonth: isPaid,
+                overdueSlotsCount,
+                balance: totalBal,
+                monthlyAmt,
+                dueDateStr,
+                nextUnpaidSlot,
+            });
+        });
+    });
+
+    waApplyFilters();
+}
+
+function waApplyFilters(){
+    const groupFilter  = document.getElementById('waGroupFilter')?.value || '';
+    const statusFilter = document.getElementById('waStatusFilter')?.value || 'due';
+
+    let filtered = _waMembers.filter(r => {
+        if(groupFilter && r.groupId !== groupFilter) return false;
+        if(statusFilter === 'due')     return !r.isPaidThisMonth && r.overdueSlotsCount === 0 && r.nextUnpaidSlot >= 0;
+        if(statusFilter === 'overdue') return r.overdueSlotsCount > 0;
+        if(statusFilter === 'paid')    return r.isPaidThisMonth;
+        return true; // 'all'
+    });
+
+    waRenderList(filtered);
+}
+
+function waRenderList(list){
+    const listEl = document.getElementById('waMemberList');
+    if(!list.length){
+        listEl.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:30px;font-size:0.82rem;">
+            ✅ No members match this filter</div>`;
+        document.getElementById('waSelectedCount').textContent = '';
+        return;
+    }
+
+    listEl.innerHTML = list.map(r => {
+        const statusBadge = r.overdueSlotsCount > 0
+            ? `<span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:5px;padding:1px 7px;font-size:0.58rem;font-weight:800;">⚠ ${r.overdueSlotsCount} overdue</span>`
+            : r.isPaidThisMonth
+                ? `<span style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);border-radius:5px;padding:1px 7px;font-size:0.58rem;font-weight:800;">✅ Paid</span>`
+                : `<span style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);border-radius:5px;padding:1px 7px;font-size:0.58rem;font-weight:800;">⏳ Due</span>`;
+
+        return `<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;" data-wa-id="${r.id}">
+            <input type="checkbox" class="wa-check" value="${r.id}" onchange="waUpdateCount()"
+                style="accent-color:#25D366;width:18px;height:18px;flex-shrink:0;cursor:pointer;">
+            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#25D366,#128C7E);color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:900;flex-shrink:0;">${ini(r.name)}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.85rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name}</div>
+                <div style="font-size:0.62rem;color:var(--text-dim);margin-top:1px;">
+                    📱 ${r.phone||'No phone'} &nbsp;·&nbsp; 📂 ${r.groupName}
+                </div>
+                <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+                    ${statusBadge}
+                    <span style="font-size:0.58rem;color:var(--text-dim);">${r.monthsPaid}/${r.totalMonths} months</span>
+                    ${r.monthlyAmt ? `<span style="font-size:0.58rem;color:#a5b4fc;">₹${r.monthlyAmt.toLocaleString('en-IN')}/mo</span>` : ''}
+                    ${r.balance > 0 ? `<span style="font-size:0.58rem;color:#f59e0b;">Bal: ₹${r.balance.toLocaleString('en-IN')}</span>` : ''}
+                    <span style="font-size:0.58rem;color:var(--text-dim);">Due: ${r.dueDateStr}</span>
+                </div>
+            </div>
+            <button onclick="waSendOne('${r.id}')"
+                style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:10px;padding:8px 12px;font-size:0.75rem;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap;">
+                📲 Send
+            </button>
+        </div>`;
+    }).join('');
+
+    waUpdateCount();
+}
+
+function waUpdateCount(){
+    const checked = document.querySelectorAll('.wa-check:checked').length;
+    const total   = document.querySelectorAll('.wa-check').length;
+    const el      = document.getElementById('waSelectedCount');
+    if(el) el.textContent = checked > 0 ? `${checked} of ${total} selected` : '';
+    // Sync select-all checkbox
+    const allCb = document.getElementById('waSelectAll');
+    if(allCb) allCb.checked = checked > 0 && checked === total;
+}
+
+function waToggleAll(checked){
+    document.querySelectorAll('.wa-check').forEach(cb => cb.checked = checked);
+    waUpdateCount();
+}
+
+function waBuildMessage(r){
+    const tpl = document.getElementById('waTemplate')?.value ||
+        'Hi {name}, your payment of ₹{amount} for {group} is due on {duedate}. Months: {months_paid}/{total_months}. Balance: ₹{balance}.';
+    return tpl
+        .replace(/{name}/g,        r.name)
+        .replace(/{amount}/g,      r.monthlyAmt ? r.monthlyAmt.toLocaleString('en-IN') : '—')
+        .replace(/{group}/g,       r.groupName)
+        .replace(/{duedate}/g,     r.dueDateStr)
+        .replace(/{months_paid}/g, r.monthsPaid)
+        .replace(/{total_months}/g,r.totalMonths)
+        .replace(/{balance}/g,     r.balance ? r.balance.toLocaleString('en-IN') : '0')
+        .replace(/{phone}/g,       r.phone);
+}
+
+function waSendOne(id){
+    const r = _waMembers.find(x => x.id === id);
+    if(!r){ showToast('❌ Member not found', false); return; }
+    if(!r.phone){ showToast(`❌ No phone number for ${r.name}`, false); return; }
+    const msg = waBuildMessage(r);
+    const url = `https://wa.me/91${r.phone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+}
+
+function waSendSelected(){
+    const checked = Array.from(document.querySelectorAll('.wa-check:checked')).map(cb => cb.value);
+    if(!checked.length){ showToast('❌ Select at least one member', false); return; }
+    if(checked.length === 1){
+        waSendOne(checked[0]);
+        return;
+    }
+    // For multiple: open one by one with small delay so browser doesn't block popups
+    let i = 0;
+    function sendNext(){
+        if(i >= checked.length){
+            showToast(`✅ Opened ${checked.length} WhatsApp chats`, true);
+            return;
+        }
+        waSendOne(checked[i]);
+        i++;
+        setTimeout(sendNext, 700);
+    }
+    showToast(`📲 Opening ${checked.length} chats — allow popups if asked`, true);
+    sendNext();
 }
 
 // Legacy alias
