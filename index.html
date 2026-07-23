@@ -1,69 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Puttu Panchalu Invitation</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayaan Kumar Mudhelli - Puttu Panchalu Invitation</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="cover">
+    <!-- Opening Cover -->
+    <div id="cover">
 
-<h1>🙏 శ్రీ గణేశాయ నమః 🙏</h1>
+        <h1>🙏 శ్రీ గణేశాయ నమః 🙏</h1>
 
-<h2>Puttu Panchalu Ceremony</h2>
+        <h2>Puttu Panchalu Ceremony</h2>
 
-<button id="openBtn">
-Touch to Open
-</button>
+        <p class="subtitle">
+            With divine blessings, we invite you to celebrate
+            the joyous occasion of our beloved child.
+        </p>
 
-</div>
+        <button id="openBtn">✨ Touch to Open ✨</button>
 
-<div id="card">
+    </div>
 
-<img src="ayaan.jpg" class="photo">
+    <!-- Invitation Card -->
+    <div id="card">
 
-<h1>Ayaan Kumar Mudhelli</h1>
+        <div class="top-decoration">🌺 🪔 🌺</div>
 
-<h2>Puttu Panchalu Ceremony</h2>
+        <img src="ayaan.jpg" alt="Ayaan Kumar Mudhelli" class="photo">
 
-<p>
-📅 22 August 2026<br><br>
+        <h1>Ayaan Kumar Mudhelli</h1>
 
-🕛 12:00 PM<br><br>
+        <h2>Puttu Panchalu Ceremony</h2>
 
-📍 Ithihas
-</p>
+        <div class="details">
 
-<p>
+            <p><strong>📅 Date:</strong> Saturday, 22 August 2026</p>
 
-Hosted By
+            <p><strong>🕛 Time:</strong> 12:00 PM</p>
 
-Mudhelli Bhanu Prasad
+            <p><strong>📍 Venue:</strong> Ithihas, Hyderabad</p>
 
-&
+        </div>
 
-Mudhelli Prashanthi
+        <div class="hosts">
 
-</p>
+            <p>Hosted by</p>
 
-<p>
+            <h3>Mudhelli Bhanu Prasad</h3>
+            <h3>&</h3>
+            <h3>Mudhelli Prashanthi</h3>
 
-Grand Mother
+            <p class="grandmother">
+                Grandmother: Mudhelli Rama Devi
+            </p>
 
-Mudhelli Rama Devi
+        </div>
 
-</p>
+        <p class="blessing">
+            Your gracious presence and blessings
+            will make this occasion truly memorable.
+        </p>
 
-<canvas id="scratch"></canvas>
+        <!-- Action Buttons -->
+        <div class="buttons">
 
-<audio id="music" loop>
-<source src="music.mp3">
-</audio>
+            <a class="button"
+               href="https://maps.google.com/?q=Ithihas Hyderabad"
+               target="_blank">
+               📍 View Location
+            </a>
 
-<script src="script.js"></script>
+            <a class="button"
+               href="https://wa.me/?text=You are invited to Ayaan Kumar Mudhelli's Puttu Panchalu Ceremony on 22 August 2026 at 12:00 PM, Ithihas, Hyderabad."
+               target="_blank">
+               📲 Share Invitation
+            </a>
+
+        </div>
+
+        <div class="bottom-decoration">🌺 🌸 🌺</div>
+
+        <!-- Scratch Layer -->
+        <canvas id="scratch"></canvas>
+
+    </div>
+
+    <!-- Background Music -->
+    <audio id="music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
 
 </body>
 </html>
