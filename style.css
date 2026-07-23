@@ -1,3 +1,7 @@
+/* ------------------------------------
+   Ayaan Kumar Mudhelli Invitation
+-------------------------------------*/
+
 *{
     margin:0;
     padding:0;
@@ -6,7 +10,7 @@
 }
 
 body{
-    background:linear-gradient(135deg,#5a0f2c,#8b1e3f,#d4af37);
+    background:linear-gradient(135deg,#5d0b2e,#7d123f,#d4af37);
     min-height:100vh;
     display:flex;
     justify-content:center;
@@ -14,112 +18,228 @@ body{
     overflow:hidden;
 }
 
+/* Cover */
+
 #cover{
-    width:90%;
-    max-width:420px;
-    background:#fff8e7;
-    border-radius:20px;
-    padding:30px;
+    width:92%;
+    max-width:430px;
+    background:#fff8ec;
+    padding:35px;
+    border-radius:25px;
     text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
-    border:6px solid #d4af37;
+    border:6px solid gold;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
 }
 
 #cover h1{
     color:#8b0000;
+    margin-bottom:20px;
     font-size:28px;
-    margin-bottom:15px;
 }
 
 #cover h2{
-    color:#6b2d5c;
+    color:#5d0b2e;
     margin-bottom:30px;
 }
 
 #openBtn{
-    background:#b8860b;
+
+    background:#8b0000;
     color:white;
+
     border:none;
+
     padding:15px 35px;
-    font-size:18px;
+
     border-radius:40px;
+
+    font-size:20px;
+
     cursor:pointer;
+
     transition:.3s;
 }
 
 #openBtn:hover{
-    transform:scale(1.05);
+
+    transform:scale(1.08);
+
 }
 
+/* Invitation Card */
+
 #card{
+
     display:none;
-    width:90%;
-    max-width:420px;
-    background:#fffaf2;
-    border-radius:20px;
+
+    width:92%;
+
+    max-width:430px;
+
+    background:white;
+
+    border-radius:25px;
+
     padding:25px;
-    text-align:center;
+
     position:relative;
-    box-shadow:0 10px 30px rgba(0,0,0,.5);
-    border:6px solid #d4af37;
+
+    text-align:center;
+
+    border:6px solid gold;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+
+    overflow:hidden;
+
 }
 
 .photo{
+
     width:150px;
+
     height:150px;
+
     border-radius:50%;
+
     object-fit:cover;
-    border:5px solid #d4af37;
-    margin-bottom:20px;
+
+    border:5px solid gold;
+
+    margin:15px auto;
+
 }
 
 #card h1{
+
     color:#8b0000;
-    margin-bottom:10px;
+
+    margin:10px 0;
+
 }
 
 #card h2{
-    color:#6b2d5c;
+
+    color:#5d0b2e;
+
     margin-bottom:20px;
+
 }
 
 #card p{
-    color:#333;
-    line-height:1.8;
-    margin-bottom:15px;
-    font-size:17px;
-}
 
-#scratch{
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    border-radius:20px;
+    font-size:18px;
+
+    line-height:1.8;
+
+    color:#333;
+
+    margin-bottom:15px;
+
 }
 
 .button{
+
     display:inline-block;
-    margin-top:10px;
-    padding:12px 25px;
-    background:#8b0000;
-    color:white;
-    border-radius:30px;
+
     text-decoration:none;
+
+    background:#8b0000;
+
+    color:white;
+
+    padding:12px 28px;
+
+    border-radius:30px;
+
+    margin:8px;
+
+    transition:.3s;
+
 }
 
-@keyframes zoomIn{
-    from{
-        transform:scale(.5);
-        opacity:0;
-    }
-    to{
-        transform:scale(1);
-        opacity:1;
-    }
+.button:hover{
+
+    background:#a40000;
+
 }
+
+/* Scratch Canvas */
+
+#scratch{
+
+    position:absolute;
+
+    left:0;
+
+    top:0;
+
+    width:100%;
+
+    height:100%;
+
+    border-radius:25px;
+
+    z-index:20;
+
+}
+
+/* Animation */
 
 .show{
-    animation:zoomIn .8s ease;
+
+    animation:zoom .8s ease;
+
+}
+
+@keyframes zoom{
+
+    from{
+
+        transform:scale(.5);
+
+        opacity:0;
+
+    }
+
+    to{
+
+        transform:scale(1);
+
+        opacity:1;
+
+    }
+
+}
+
+/* Floating Flowers */
+
+.flower{
+
+    position:fixed;
+
+    top:-40px;
+
+    animation:fall linear forwards;
+
+    z-index:9999;
+
+    pointer-events:none;
+
+}
+
+@keyframes fall{
+
+    from{
+
+        transform:translateY(0) rotate(0deg);
+
+    }
+
+    to{
+
+        transform:translateY(110vh) rotate(360deg);
+
+    }
+
 }
