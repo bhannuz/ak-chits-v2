@@ -1,0 +1,125 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#5a0f2c,#8b1e3f,#d4af37);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+}
+
+#cover{
+    width:90%;
+    max-width:420px;
+    background:#fff8e7;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    border:6px solid #d4af37;
+}
+
+#cover h1{
+    color:#8b0000;
+    font-size:28px;
+    margin-bottom:15px;
+}
+
+#cover h2{
+    color:#6b2d5c;
+    margin-bottom:30px;
+}
+
+#openBtn{
+    background:#b8860b;
+    color:white;
+    border:none;
+    padding:15px 35px;
+    font-size:18px;
+    border-radius:40px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+#openBtn:hover{
+    transform:scale(1.05);
+}
+
+#card{
+    display:none;
+    width:90%;
+    max-width:420px;
+    background:#fffaf2;
+    border-radius:20px;
+    padding:25px;
+    text-align:center;
+    position:relative;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    border:6px solid #d4af37;
+}
+
+.photo{
+    width:150px;
+    height:150px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid #d4af37;
+    margin-bottom:20px;
+}
+
+#card h1{
+    color:#8b0000;
+    margin-bottom:10px;
+}
+
+#card h2{
+    color:#6b2d5c;
+    margin-bottom:20px;
+}
+
+#card p{
+    color:#333;
+    line-height:1.8;
+    margin-bottom:15px;
+    font-size:17px;
+}
+
+#scratch{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    border-radius:20px;
+}
+
+.button{
+    display:inline-block;
+    margin-top:10px;
+    padding:12px 25px;
+    background:#8b0000;
+    color:white;
+    border-radius:30px;
+    text-decoration:none;
+}
+
+@keyframes zoomIn{
+    from{
+        transform:scale(.5);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+.show{
+    animation:zoomIn .8s ease;
+}
